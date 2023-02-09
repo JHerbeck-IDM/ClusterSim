@@ -1,0 +1,342 @@
+---
+title: "Cluster simulation"
+author: "Josh Herbeck"
+output: html_document
+---
+
+## Introduction
+
+Simple model of HIV transmission, to create a transmission line list to use
+in studies of phylogenetic clustering. In this module, we simulate HIV epidemic spread with 
+different assumptions about the resulting transmission network.  
+Each individual has rate of transmission, and this is a combination of contact rate and per-contact rate of transmission. There also individual rates of sampling (functionally this is removal/extinction).
+
+First order goal:  understand if high mean degree (or "super-spreading" or a small 
+core group) is associated with more clustering and bigger clusters. 
+Second order goal:  identify predictors of clustering patterns.
+
+With this modeling approach I am trying to keep it very simple--assess some contact
+network parameters without building a full contact network--and also be able to vary
+mean degree, per-contact transmission rate, sample fraction, sample bias, and
+sampling time after infection.
+
+
+```{r LOAD LIBRARIES, include=FALSE}
+
+library(dplyr)
+library(survival)
+library(ggpmisc)
+library(ggplot2)
+```
+
+## Initial parameter inputs  
+
+This is now also in the "/scripts/initial_parameters.R" script.
+
+```{r INITIAL INPUTS, echo=TRUE}
+
+# Basic parameters
+samplesize <- 10
+sim_years <- 1
+timestep <- 1/52 #time-step in years; needs to be > 1/36.5 for homogeneous sims
+
+heterogeneous_risk <- 1 # set to 1 to have heterogeneous risk of transmission; 0 for homogeneous risk
+
+# Transmission rate parameters (these are initial parameters, if using the heterogeneous transmission option)
+partners <- 0.5  # "p", mean number of partners per timestep
+#susc <- 0.90   # fraction of susceptible individuals in the population (potential transmission partners)
+acts_per_day <- 0.3   # "a", mean sex acts per day per partner 
+lambda <- 0.5  # "r", mean risk of transmission per sero-discordant sexual contact (per-contact transmission prob.)
+
+# Removal/sampling rate paramter
+
+removal_rate <- 1/365 # "e", expected length of time between infection and sampling = 1 year
+
+set.seed(42)
+```
+
+
+```{r ASSIGN HETEROGENEOUS RISK VALUES}
+
+# Running the "assign_rates" function will make vectors of the 4 rates (in a list output), as long as "samplesize"
+# These vectors are then used to populate the rate variables in the population_summary df, below.
+
+rates <- assign_rates(samplesize)
+
+```
+
+
+## Create the population
+
+```{r CREATE POPULATION, echo=TRUE}
+
+population_summary <-
+  data.frame(
+    "ID" = seq(1, samplesize, by = 1), # samplesize is from above parameter inputs (total trial pop size)
+    "removal_rate" = rates$removal_rate,
+    "partners" = rates$partners,
+    "acts_per_day" = rates$acts_per_day,
+    "transmission_risk_per_act" = rates$lambda,
+   
+    #"acts_per_timestep" = floor(rates$acts_per_day * (rates$timestep * 365) * rates$partners), # 1 is fraction susceptible
+    # Whatever the timestep is, this "acts_per_day*(timestep*365)" will report out in days
+    # Which is necessary because "acts_per_day" is in "days" units (contacts per day)
+    
+    "transmission_risk_per_timestep" = 1 - (1 - rates$lambda) ^
+      floor(rates$acts_per_day * (timestep * 365) * rates$partners),
+    # 1 - (1 - population_summary$transmission_risk_per_act)^(population_summary$acts_per_timestep)
+    "infection_source" = 0,
+    
+    # ADD in transmission rate modifier based on time since infection
+    
+    "sampling_time" = NA,
+    "cumulative_partners" = NA,
+    "cumulative_transmissions" = NA
+  )
+
+# Assume all of these individuals are HIV-infected already
+
+#population_summary$transmission_risk_per_timestep = 1 - (1 - #population_summary$transmission_risk_per_act)^(population_summary$infectious_acts_per_timestep)
+
+```
+
+```{r TRANSMISSION RECORD}
+
+# Create shell for transmission record, gives each individual ID their own set of timestep rows
+transmission_record <- data.frame(expand.grid("ID" = seq(1, samplesize, by = 1), "timestep" = timestep))
+transmission_record <- transmission_record %>% mutate(time_of_infection=0, source=0, transmission=0, removal=0)
+
+```
+
+
+```{r RUN REMOVAL and TRANSMISSION FUNCTIONS}
+
+transmission_record <- assess_removal(population_summary, transmission_record)
+transmission_record <- assess_transmission(population_summary, transmission_record)
+
+new_transmission_count <- sum(transmission_record$transmission)
+#df[nrow(df) + 1, ] <- c(df[1, ])
+
+```
+
+
+```{r ADD NEW INFECTEDS}
+# Add new infected individuals to the population
+
+for(i in 1:new_transmission_count){
+  
+}
+new.infecteds <- append_new_infecteds(new_transmission_count, 1)
+
+
+
+population_summary <- append_population_summary(population_summary)
+
+
+```
+
+
+
+
+
+```{r}
+
+n <- 10
+
+cohort_summary <-
+  data.frame(
+    "ID" = seq( 1, n, by = 1),
+    "removal_rate" = removal_rate,
+    "partners" = partners,
+    #"susceptible_partners" = s,
+    "acts_per_day" = acts_per_day,
+    "transmission_risk_per_act" = lambda,
+    "infectious_acts_per_timestep" = floor(acts_per_day * (timestep * 365) * 1.0), # 1 is fraction susceptible
+    # Whatever the timestep is, this "acts_per_day*(timestep*365)" will report out in days
+    # Which is necessary because "acts_per_day" is in "days" units (contacts per day)
+    "transmission_risk_per_timestep" = 1 - (1 - lambda) ^
+      floor(acts_per_day * (timestep * 365) * 1.0),
+    # 1 - (1 - population_summary$transmission_risk_per_act)^(population_summary$infectious_acts_per_timestep)
+    "infection_source" = 0,
+    # ADD in transmission rate modifier based on time since infection
+    "sampling_time" = NA,
+    # timestep of removal = 1
+    "cumulative_partners" = NA,
+    "cumulative_transmissions" = NA
+  )
+
+
+```
+
+
+
+
+
+
+# Censor at transmission; Removes all the rows (for each ID) after the first transmission == 1 row
+#population_cens <- population %>% 
+#  group_by(ID) %>% 
+#  slice(if(any(transmission == 1)) 1:which.max(transmission == 1) else row_number())  
+# This "population_cens" still includes individuals who did not transmit
+
+# Subset "population_cens" to just individuals who got infected
+#transmissions <- population_cens[population_cens$ID %in% unique(population_cens$ID[population_cens$transmission==1]), ]
+```
+
+## Some basic QA/QC of the data
+
+```{r QA/QC, include=FALSE}
+
+# histograms of acquisition risk per timestep
+hist(population_summary$transmission_risk_per_timestep,
+     main = "infection risk per timestep",
+     xlab = "infection risk per timestep")
+
+# No zero probabilities included:
+hist(population_summary$transmission_risk_per_timestep[population_summary$transmission_risk_per_timestep > 0],
+     main = "infection risk per timestep",
+     xlab = "infection risk per timestep")
+
+# This table shows all/only individuals who got infected (and their vaccination status)
+table(population_cens$hiv, population_cens$transmission)
+```
+
+## Outputs 
+
+```{r OUTPUTS, echo=TRUE}
+
+# Get person-years of follow-up, for both vaccine and placebo arms
+py <- subset(population_cens) %>% group_by(ID, vaccine) %>% summarise(max(Year)) %>% group_by(vaccine) %>% summarise(sum(`max(Year)`)) 
+# Adds together all of the maximum Year values for each ID (which show how long each person has spent in the susceptible stage)
+
+# Cumulative incidence in the placebo arm
+#inc.placebo <- table(population_cens$transmission[population_cens$vaccine==0])[2]/py[1,2] #person-years incidence in placebo group
+inc_placebo <- sum(population_cens$transmission[population_cens$vaccine==0])/py[1,2] #person-years incidence in placebo group
+
+# Cumulative incidence in the vaccine arm
+inc_vaccine <- table(population_cens$transmission[population_cens$vaccine==1])[2]/py[2,2] #person-years incidence in vaccine group
+
+# Clinical vaccine efficacy
+#1 - inc_vaccine/inc_placebo}
+```
+
+## Survival curves
+
+```{r SURVIVAL CURVE, include=FALSE}
+# Survival curve
+population_cens_km <- subset(population_cens) %>% 
+  group_by(ID) %>% 
+  summarise(enddate = max(Year),
+            event = max(transmission),
+            vaccine = max(as.numeric(vaccine)))   
+ggsurvplot(
+  fit = survfit(Surv(enddate, event) ~ vaccine, data = population_cens_km),
+  legend.labs = c("placebo", "vaccine"),
+  conf.int = TRUE,
+  xlab = "Years", 
+  ylab = "Cumulative survival",
+  fun = "pct")
+
+# Estimate cumulative clinical vaccine efficacy in this population
+cox <- summary(coxph(Surv(enddate, event) ~ vaccine, data = population_cens_km))
+paste(round(1-cox$coefficients[2],2), " (", round(1-cox$conf.int[4],2), "-",round(1-cox$conf.int[3],2), ")", sep="")
+```
+
+## Calculate instantaneous incidence over the course of the trial
+
+```{r INCIDENCE}
+# Count the infections in each "timestep"
+population_cens$vaccine <- as.factor(population_cens$vaccine)
+by_Year <- population_cens %>% group_by(Year, vaccine)
+Inf_by_Year_by_vaccine <- by_Year %>% summarise(
+  transmissions = sum(transmission)
+) 
+
+# Count the person years in each "timestep"
+Person_years_by_Year <- by_Year %>% summarise(
+  #py = length(ID)
+  py = as.integer(length(ID)*(timestep)) # length(ID) == the number of individuals in that timestep grouping
+) 
+
+# Merge outputs
+Incidence_df <- Inf_by_Year_by_vaccine
+Incidence_df$py <- Person_years_by_Year$py
+Incidence_df$incidence_100py <- as.integer((Incidence_df$transmissions/Incidence_df$py)*100)
+Incidence_df <- ungroup(Incidence_df)
+```
+
+## Incidence plots
+
+```{r INCIDENCE PLOTS}
+# Plot incidence for vaccine and placebo
+Incidence_df %>%
+  ggplot(aes(x=Year, y=incidence_100py, group = vaccine, color = vaccine)) +
+  geom_line() +
+  geom_point() +
+  ggtitle("Incidence by vaccination status") +
+  ylim(c(0, max(Incidence_df$incidence_100py)+0.5)) +
+  xlim(c(0, 5)) +
+  labs(title = "Incidence", x = "Years", y = "HIV infections per 100 py")
+
+# Base R plot, because I don't actually like ggplot2
+plot(Incidence_df$Year[Incidence_df$vaccine == 0], 
+     Incidence_df$incidence_100py[Incidence_df$vaccine == 0], 
+     type = "l",
+     lty = 1,
+     xlim = c(0, 5),
+     ylim = c(0, max(Incidence_df$incidence_100py)+0.5),
+     xlab = "Years",
+     ylab = "Incidence, per 100 py",
+     col = "red",
+     main = "HIV vaccine trial incidence")
+lines(Incidence_df$Year[Incidence_df$vaccine == 1], 
+      Incidence_df$incidence_100py[Incidence_df$vaccine == 1], 
+      type = "l",
+      lty = 2,
+      col = "blue",
+      add = TRUE)
+legend(0, 9, legend=c("Placebo", "Vaccine"),
+       col=c("red", "blue"), lty=1:2, cex=0.8)
+```
+
+## Vaccine efficacy
+```{r}
+# Estimate and plot clinical vaccine efficacy (1 - vaccine incidence/placebo incidence)
+clinical_VE <- 1 - (Incidence_df$incidence_100py[Incidence_df$vaccine == 1])/(Incidence_df$incidence_100py[Incidence_df$vaccine == 0])
+
+# Make df for outputs of risk parameter sweeps
+# The dependent variable for basic regressions should be the clinical_VE or the difference
+# between clinical VE and per-contact VE
+df.output <- data.frame(matrix(ncol = 1, nrow = 30))
+colnames(df) <- c("time")
+df.output$clinical_VE <- clinical_VE
+
+
+
+```
+
+## Vaccine efficacy plots
+```{r Vaccine efficacy plots}
+plot(Incidence_df$Year[Incidence_df$vaccine == 1], clinical_VE,
+     ylim = c(0, 1),
+     ylab = "clinical VE",
+     xlab = "Years",
+     pch = 19,
+     main = "Clinical vaccine efficacy")
+abline(h = 0.5,
+       lty = 2,
+       col = "red")
+legend(0, 1, legend=c("Per-contact vaccine efficacy"),
+       col=c("red"), 
+       lty = 2, 
+       cex=0.8,
+       bty = 'n')
+```
+
+# Parameter sweeps
+
+How do I want these sweeps to be visualized? i.e. What figures do I want to make?
+Relationship? 
+Comparison?
+Composition? e.g. trends/changes over time?
+Distribution?
