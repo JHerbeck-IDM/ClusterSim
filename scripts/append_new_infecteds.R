@@ -3,7 +3,9 @@
 # n = new_transmission_count
 
 #when(timestep > 0, )
-#rates <- assign_rates(new_transmission_count)
+
+# rates <- assign_rates(new_transmission_count)
+# transmitters <- transmission_record$ID[transmission_record$transmission == 1]
 
 make_new_infecteds <- function(n){
   
@@ -21,6 +23,7 @@ make_new_infecteds <- function(n){
       floor(rates$acts_per_day * (timestep * 365) * rates$partners),
     # 1 - (1 - population_summary$transmission_risk_per_act)^(population_summary$infectious_acts_per_timestep)
     "infection_source" = transmitters,
+    "infection_year" = infection_times,
     # ADD in transmission rate modifier based on time since infection
     "sampling_time" = NA,
     # timestep of removal = 1
