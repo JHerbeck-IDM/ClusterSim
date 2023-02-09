@@ -4,15 +4,18 @@ author: "Josh Herbeck"
 output: html_document
 ---
 
-## Introduction
+## Overview
 
 Simple model of HIV transmission, to create a transmission line list to use
-in studies of phylogenetic clustering. In this module, we simulate HIV epidemic spread with 
+in studies of phylogenetic clustering. We simulate HIV epidemic spread with 
 different assumptions about the resulting transmission network.  
-Each individual has rate of transmission, and this is a combination of contact rate and per-contact rate of transmission. There also individual rates of sampling (functionally this is removal/extinction).
+Each individual has rate of transmission, and this is a combination of contact rate 
+and per-contact rate of transmission. There also individual rates of sampling 
+(functionally this is removal/extinction).
 
 First order goal:  understand if high mean degree (or "super-spreading" or a small 
 core group) is associated with more clustering and bigger clusters. 
+
 Second order goal:  identify predictors of clustering patterns.
 
 With this modeling approach I am trying to keep it very simple--assess some contact
@@ -20,13 +23,19 @@ network parameters without building a full contact network--and also be able to 
 mean degree, per-contact transmission rate, sample fraction, sample bias, and
 sampling time after infection.
 
-
 ```{r LOAD LIBRARIES, include=FALSE}
 
 library(dplyr)
-library(survival)
-library(ggpmisc)
 library(ggplot2)
+```
+
+```{r FUNCTIONS}
+
+source("scripts/initial_parameters.R", local = knitr::knit_global())
+source("scripts/assign_rates.R", local = knitr::knit_global())
+source("scripts/assess_removal.R", local = knitr::knit_global())
+source("scripts/assess_transmission.R", local = knitr::knit_global())
+source("scripts/append_new_infecteds.R", local = knitr::knit_global())
 ```
 
 ## Initial parameter inputs  
@@ -48,18 +57,19 @@ partners <- 0.5  # "p", mean number of partners per timestep
 acts_per_day <- 0.3   # "a", mean sex acts per day per partner 
 lambda <- 0.5  # "r", mean risk of transmission per sero-discordant sexual contact (per-contact transmission prob.)
 
-# Removal/sampling rate paramter
+# Removal/sampling rate parameter
 
 removal_rate <- 1/365 # "e", expected length of time between infection and sampling = 1 year
 
-set.seed(42)
+set.seed(1234)
 ```
-
 
 ```{r ASSIGN HETEROGENEOUS RISK VALUES}
 
 # Running the "assign_rates" function will make vectors of the 4 rates (in a list output), as long as "samplesize"
 # These vectors are then used to populate the rate variables in the population_summary df, below.
+
+# I think this is necessary just for the initial population (the first time I make population_summary)
 
 rates <- assign_rates(samplesize)
 
@@ -104,7 +114,7 @@ population_summary <-
 
 # Create shell for transmission record, gives each individual ID their own set of timestep rows
 transmission_record <- data.frame(expand.grid("ID" = seq(1, samplesize, by = 1), "timestep" = timestep))
-transmission_record <- transmission_record %>% mutate(time_of_infection=0, source=0, transmission=0, removal=0)
+transmission_record <- transmission_record %>% mutate(time_of_infection=0, infection_source=0, transmission=0, removal=0)
 
 ```
 
@@ -123,17 +133,39 @@ new_transmission_count <- sum(transmission_record$transmission)
 ```{r ADD NEW INFECTEDS}
 # Add new infected individuals to the population
 
-for(i in 1:new_transmission_count){
-  
-}
-new.infecteds <- append_new_infecteds(new_transmission_count, 1)
+rates <- assign_rates(new_transmission_count)
+# Use "assign_rates" to make new heterogeneous rate vectors of new_transmission_count length
 
+transmitters <- transmission_record$ID[transmission_record$transmission == 1]
 
+new_infecteds <- make_new_infecteds(new_transmission_count)
 
-population_summary <- append_population_summary(population_summary)
+population_summary <- rbind(population_summary, new_infecteds)
 
 
 ```
+
+# Add infection_source variable to population_summary
+
+```{r LINK INFECTIONS}
+
+transmitters <- transmission_record$ID[transmission_record$transmission == 1]
+population_summary <- population_summary
+  
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
