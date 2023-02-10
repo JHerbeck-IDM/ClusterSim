@@ -1,84 +1,32 @@
----
-title: "Cluster simulation"
-author: "Josh Herbeck"
-output: html_document
----
-
-## Overview
-
-Simple model of HIV transmission, to create a transmission line list to use
-in studies of phylogenetic clustering. We simulate HIV epidemic spread with 
-different assumptions about the resulting transmission network.  
-Each individual has rate of transmission, and this is a combination of contact rate 
-and per-contact rate of transmission. There also individual rates of sampling 
-(functionally this is removal/extinction).
-
-First order goal:  understand if high mean degree (or "super-spreading" or a small 
-core group) is associated with more clustering and bigger clusters. 
-
-Second order goal:  identify predictors of clustering patterns.
-
-With this modeling approach I am trying to keep it very simple--assess some contact
-network parameters without building a full contact network--and also be able to vary
-mean degree, per-contact transmission rate, sample fraction, sample bias, and
-sampling time after infection.
-
-```{r LOAD LIBRARIES, include=FALSE}
+##### Libraries ####
 
 library(dplyr)
 library(ggplot2)
-```
-
-```{r FUNCTIONS}
-
-source("scripts/initial_parameters.R", local = knitr::knit_global())
-source("scripts/assign_rates.R", local = knitr::knit_global())
-source("scripts/assess_removal.R", local = knitr::knit_global())
-source("scripts/assess_transmission.R", local = knitr::knit_global())
-source("scripts/make_new_infecteds.R", local = knitr::knit_global())
-```
-
-## Initial parameter inputs  
-
-This is now also in the "/scripts/initial_parameters.R" script.
-
-```{r INITIAL INPUTS, echo=TRUE}
-
-# Basic parameters
-samplesize <- 10
-sim_years <- 1
-timestep <- 1/52 #time-step in years; needs to be > 1/36.5 for homogeneous sims
-
-heterogeneous_risk <- 1 # set to 1 to have heterogeneous risk of transmission; 0 for homogeneous risk
-
-# Transmission rate parameters (these are initial parameters, if using the heterogeneous transmission option)
-partners <- 0.5  # "p", mean number of partners per timestep
-#susc <- 0.90   # fraction of susceptible individuals in the population (potential transmission partners)
-acts_per_day <- 0.3   # "a", mean sex acts per day per partner 
-lambda <- 0.5  # "r", mean risk of transmission per sero-discordant sexual contact (per-contact transmission prob.)
-
-# Removal/sampling rate parameter
-
-removal_rate <- 1/365 # "e", expected length of time between infection and sampling = 1 year
-
-set.seed(1234)
-```
 
 
-```{r ASSIGN HETEROGENEOUS RISK VALUES}
+#### Load functions ####
+
+source("scripts/initial_parameters.R")
+source("scripts/assign_rates.R")
+source("scripts/assess_removal.R")
+source("scripts/assess_transmission.R")
+source("scripts/make_new_infecteds.R")
+
+
+
+#### Assign heterogeneous risk values ####
 
 # Running the "assign_rates" function will make vectors of the 4 rates (in a list output), as long as "samplesize"
 # These vectors are then used to populate the rate variables in the population_summary df, below.
 
-# This specific call (with "samplesize") is just for the initial population (the first time I make population_summary)
+# This specific call (with "samplesize" as input) is just for the initial population (the first time I make population_summary)
 
 rates <- assign_rates(samplesize)
-```
 
 
-## Create the population
 
-```{r CREATE POPULATION, echo=TRUE}
+#### Create the population ####
+
 
 population_summary <-
   data.frame(
@@ -87,7 +35,7 @@ population_summary <-
     "partners" = rates$partners,
     "acts_per_day" = rates$acts_per_day,
     "transmission_risk_per_act" = rates$lambda,
-   
+    
     #"acts_per_timestep" = floor(rates$acts_per_day * (rates$timestep * 365) * rates$partners), # 1 is fraction susceptible
     # Whatever the timestep is, this "acts_per_day*(timestep*365)" will report out in days
     # Which is necessary because "acts_per_day" is in "days" units (contacts per day)

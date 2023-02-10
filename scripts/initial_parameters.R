@@ -7,16 +7,15 @@ sim_years <- 1
 timestep <- 1/52 #time-step in years; needs to be > 1/36.5 for homogeneous sims
 removal_rate <- 1/365
 
-heterogeneous_risk <- 1 # set to 1 to give everyone the same risk of transmission given exposure (mean.lambda)
+# heterogeneous_risk <- 1 # set to 1 to give everyone the same risk of transmission given exposure (mean.lambda)
 
 
 
 # Transmission rate parameters (these are initial parameters, if using the heterogeneous transmission option)
 
-mean_partners <- 1  # "p", mean number of partners
-susc <- 0.90   # fraction of susceptible individuals in the population (potential transmission partners)
+mean_partners <- 1  # "p", mean number of (susceptible) partners per timestep
 acts_per_day <- 1   # "a", mean sex acts per day per partner 
-mean_lambda <- 0.5  # "r", mean risk of transmission given a sero-discordant contact (per-contact transmission prob.)
+mean_lambda <- 0.002  # "r", mean risk of transmission given a sero-discordant contact (per-contact transmission prob.)
 
 
 # Removal/sampling rate paramter
