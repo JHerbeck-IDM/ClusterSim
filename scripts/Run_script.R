@@ -13,7 +13,6 @@ source("scripts/assess_transmission.R")
 source("scripts/make_new_infecteds.R")
 
 
-
 #### Assign heterogeneous risk values ####
 
 # Running the "assign_rates" function will make vectors of the 4 rates (in a list output), as long as "samplesize"
@@ -26,7 +25,6 @@ rates <- assign_rates(samplesize)
 
 
 #### Create the population ####
-
 
 population_summary <-
   data.frame(
@@ -46,41 +44,34 @@ population_summary <-
     "infection_source" = 0,
     "infection_year" = 0,
     
-    # ADD in transmission rate modifier based on time since infection
-    
     "sampling_time" = NA,
     "cumulative_partners" = NA,
     "cumulative_transmissions" = NA
   )
 
-# Assume all of these individuals are HIV-infected already
-
-#population_summary$transmission_risk_per_timestep = 1 - (1 - #population_summary$transmission_risk_per_act)^(population_summary$infectious_acts_per_timestep)
-
-```
 
 
-```{r TRANSMISSION RECORD}
+#### Create Transmission record #### 
 
 # Create shell for transmission record, gives each individual ID their own set of timestep rows
 # This record is made anew each timestep (as opposed to the population_summary, which is just appended each timestep)
 
 transmission_record <- data.frame(expand.grid("ID" = seq(1, samplesize, by = 1), "timestep" = timestep))
 transmission_record <- transmission_record %>% mutate(infection_year=0, infection_source=0, transmission=0, removal=0)
-```
 
 
-```{r RUN REMOVAL and TRANSMISSION FUNCTIONS}
+
+#### Removal or transmission #### 
 
 transmission_record <- assess_removal(population_summary, transmission_record)
 transmission_record <- assess_transmission(population_summary, transmission_record)
-
 new_transmission_count <- sum(transmission_record$transmission)
-```
 
-```{r ADD NEWLY INFECTEDS}
 
-# Add newly infected individuals to the population_summary df
+
+#### Add newly infecteds ####
+
+# Append newly infected individuals to the "population_summary" data frame
 
 rates <- assign_rates(new_transmission_count)
 # Use "assign_rates" to make new heterogeneous rate vectors of new_transmission_count length
