@@ -44,7 +44,7 @@ assign_rates <- function(samplesize) {
   
   ##### PER-CONTACT (per-act) TRANSMISSION RATE
   # Set a gamma distribution on per-contact probability of transmission
-  # lambda <- 0.002 # mean risk of infection given exposure (per-contact infection prob.)
+  lambda <- lambda # mean risk of infection given exposure (per-contact infection prob.)
   shape_gamma <- 50   # shape parameter
   scale <- lambda / shape_gamma  # scale parameter
   # These initial shape and scale give a gamma distribution that is pretty symmetrical, with min = 0.001, max = 0.003

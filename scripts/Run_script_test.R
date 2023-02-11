@@ -53,10 +53,13 @@ population_summary <-
 simulation_timesteps <- seq(timestep, sim_years, by=timestep)
 
 for (i in seq_along(simulation_timesteps)){
-  population_summary$[i] 
-  masses[i] <- mass
-}
-masses
+  
+  #Run all of the next steps
+  #simulation_timesteps[i] 
+  
+  
+#}
+#population_summary
 
 
 
@@ -65,7 +68,7 @@ masses
 # Create shell for transmission record, gives each individual ID their own set of timestep rows
 # This record is made anew each timestep (as opposed to the population_summary, which is just appended each timestep)
 
-transmission_record <- data.frame(expand.grid("ID" = seq(1, samplesize, by = 1), "timestep" = timestep))
+transmission_record <- data.frame(expand.grid("ID" = seq(1, samplesize, by = 1), "timestep" = simulation_timesteps[i] ))
 transmission_record <- transmission_record %>% mutate(infection_year=0, infection_source=0, transmission=0, removal=0)
 
 
@@ -80,20 +83,26 @@ new_transmission_count <- sum(transmission_record$transmission)
 
 #### Add newly infecteds ####
 
-# Append newly infected individuals to the "population_summary" data frame
-rates <- assign_rates(new_transmission_count)
-# Use "assign_rates" to make new heterogeneous rate vectors of new_transmission_count length
+if(new_transmission_count > 0) {
+  # Append newly infected individuals to the "population_summary" data frame
+  rates <- assign_rates(new_transmission_count)
+  # Use "assign_rates" to make new heterogeneous rate vectors of new_transmission_count length
+  
+  transmitters <-
+    transmission_record$ID[transmission_record$transmission == 1]
+  removed <- transmission_record$ID[transmission_record$removal == 1]
+  infection_times <-
+    transmission_record$timestep[transmission_record$transmission == 1]
+  
+  # the "rates", "transmitters", "removed", and "infection_times" vectors are used
+  # in the "make_new_infected()" function to fill in variables
+  
+  new_infecteds <- make_new_infecteds(new_transmission_count)
+  population_summary <- rbind(population_summary, new_infecteds)
+  
+}
 
-transmitters <- transmission_record$ID[transmission_record$transmission == 1]
-removed <- transmission_record$ID[transmission_record$removal == 1]
-infection_times <- transmission_record$timestep[transmission_record$transmission == 1]
-
-# the "rates", "transmitters", "removed", and "infection_times" vectors are used 
-# in the "make_new_infected()" function to fill in variables
-
-new_infecteds <- make_new_infecteds(new_transmission_count)
-population_summary <- rbind(population_summary, new_infecteds)
-
-
+}
+population_summary
 
 
