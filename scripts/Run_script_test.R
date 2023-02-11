@@ -102,7 +102,7 @@ for (i in seq_along(simulation_timesteps)) {
     
     new_infecteds <- make_new_infecteds(new_transmission_count)
     population_summary <- rbind(population_summary, new_infecteds)
-    
+    #return(population_summary)
   }
   
 }

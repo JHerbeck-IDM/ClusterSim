@@ -2,7 +2,7 @@
 
 # Basic parameters
 
-samplesize <- 500
+samplesize <- 20
 sim_years <- 1
 timestep <- 1/52 #time-step in years; needs to be > 1/36.5 for homogeneous sims
 
@@ -14,11 +14,11 @@ timestep <- 1/52 #time-step in years; needs to be > 1/36.5 for homogeneous sims
 
 mean_partners <- 1  # mean number of (susceptible) partners per timestep
 acts_per_day <- 1   # mean sex acts per day per partner 
-lambda <- 0.003  # mean risk of transmission given a sero-discordant contact (per-contact transmission prob.)
+lambda <- 0.5  # mean risk of transmission given a sero-discordant contact (per-contact transmission prob.)
 
 
 # Removal/sampling rate paramter
 
-removal_rate <- 1/365 # expected length of time between infection and sampling = 1 year
+removal_rate <- 1/3 # expected length of time between infection and sampling = 1 year
 
 set.seed(42)

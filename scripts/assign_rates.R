@@ -26,7 +26,7 @@ assign_rates <- function(samplesize) {
   
   ##### EXTINCTION RATE
   # This is lineage extinction, removal, or sampling and going on ART
-  removal_rate <- c(rep(1 / 365, samplesize)) #per day
+  removal_rate <- c(rep(1 / 3, samplesize)) #per day
   # temporary value until more thought on this
   # wait time is 1 year until sampling
   
