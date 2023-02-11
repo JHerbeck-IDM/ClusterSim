@@ -30,8 +30,7 @@ network parameters without building a full contact network--and also be able to 
 mean degree, per-contact transmission rate, sample fraction, sample bias, and
 sampling time after infection.
 
-We assume all of these individuals are HIV-infected already
+We assume all of these individuals are HIV-infected already.
 
 
-#population_summary$transmission_risk_per_timestep = 1 - (1 - #population_summary$transmission_risk_per_act)^(population_summary$infectious_acts_per_timestep)
 

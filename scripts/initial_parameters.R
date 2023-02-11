@@ -14,7 +14,7 @@ timestep <- 1/52 #time-step in years; needs to be > 1/36.5 for homogeneous sims
 
 mean_partners <- 1  # mean number of (susceptible) partners per timestep
 acts_per_day <- 1   # mean sex acts per day per partner 
-lambda <- 0.002  # mean risk of transmission given a sero-discordant contact (per-contact transmission prob.)
+lambda <- 0.003  # mean risk of transmission given a sero-discordant contact (per-contact transmission prob.)
 
 
 # Removal/sampling rate paramter
