@@ -40,35 +40,11 @@ source("scripts/make_new_infecteds.R", local = knitr::knit_global())
 
 ## Initial parameter inputs  
 
-This is now also in the "/scripts/initial_parameters.R" script.
-
-```{r INITIAL INPUTS, echo=TRUE}
-
-# Basic parameters
-samplesize <- 10
-sim_years <- 1
-timestep <- 1/52 #time-step in years; needs to be > 1/36.5 for homogeneous sims
-
-heterogeneous_risk <- 1 # set to 1 to have heterogeneous risk of transmission; 0 for homogeneous risk
-
-# Transmission rate parameters (these are initial parameters, if using the heterogeneous transmission option)
-partners <- 0.5  # "p", mean number of partners per timestep
-#susc <- 0.90   # fraction of susceptible individuals in the population (potential transmission partners)
-acts_per_day <- 0.3   # "a", mean sex acts per day per partner 
-lambda <- 0.5  # "r", mean risk of transmission per sero-discordant sexual contact (per-contact transmission prob.)
-
-# Removal/sampling rate parameter
-
-removal_rate <- 1/365 # "e", expected length of time between infection and sampling = 1 year
-
-set.seed(1234)
-```
-
 
 ```{r ASSIGN HETEROGENEOUS RISK VALUES}
 
-# Running the "assign_rates" function will make vectors of the 4 rates (in a list output), as long as "samplesize"
-# These vectors are then used to populate the rate variables in the population_summary df, below.
+# Running the "assign_rates" function will make vectors of the 4 rates (in a list output) as long as "samplesize"
+# These vectors are then used to populate the rate variables in the new population_summary df, below.
 
 # This specific call (with "samplesize") is just for the initial population (the first time I make population_summary)
 
@@ -100,7 +76,7 @@ population_summary <-
     
     # ADD in transmission rate modifier based on time since infection
     
-    "sampling_time" = NA,
+    "sampling_year" = NA,
     "cumulative_partners" = NA,
     "cumulative_transmissions" = NA
   )
@@ -118,7 +94,7 @@ population_summary <-
 # This record is made anew each timestep (as opposed to the population_summary, which is just appended each timestep)
 
 transmission_record <- data.frame(expand.grid("ID" = seq(1, samplesize, by = 1), "timestep" = timestep))
-transmission_record <- transmission_record %>% mutate(infection_year=0, infection_source=0, transmission=0, removal=0)
+transmission_record <- transmission_record %>% mutate(removal=0, transmission=0)
 ```
 
 
@@ -130,7 +106,8 @@ transmission_record <- assess_transmission(population_summary, transmission_reco
 new_transmission_count <- sum(transmission_record$transmission)
 ```
 
-```{r ADD NEWLY INFECTEDS}
+
+```{r ADD NEWLY INFECTEDS TO POP_SUMMARY}
 
 # Add newly infected individuals to the population_summary df
 

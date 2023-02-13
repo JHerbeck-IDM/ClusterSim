@@ -4,10 +4,13 @@
 #library(ggplot2)
 
 
-#### Load functions ####
+#### Run scripts ####
 
+# Initial parameters
 source("scripts/initial_parameters.R")
-source("scripts/assign_rates.R")
+
+# Functions needed to run the simulations
+source("scripts/assign_rates.R")   # Pulls in parameters from "initial_parameters.R"
 source("scripts/assess_removal.R")
 source("scripts/assess_transmission.R")
 source("scripts/make_new_infecteds.R")
@@ -44,36 +47,25 @@ population_summary <-
     "infection_source" = 0,
     "infection_year" = 0,
     
-    "sampling_time" = NA,
+    "sampling_year" = NA,
     "cumulative_partners" = NA,
     "cumulative_transmissions" = NA
   )
 
 
+# Create shell for transmission record, gives each individual ID their own set of timestep rows
+# This record is made anew each timestep (as opposed to the population_summary, which is just appended each timestep)
+
+transmission_record <- data.frame(expand.grid("ID" = seq(1, samplesize, by = 1), "timestep" = timestep))
+transmission_record <- transmission_record %>% mutate(transmission=0, removal=0)
+
+# Set up simulation loops
+
 simulation_timesteps <- seq(timestep, sim_years, by=timestep)
 
 for (i in seq_along(simulation_timesteps)) {
   
-  #### Create Transmission record ####
-  
-  # Create shell for transmission record, gives each individual ID their own set of timestep rows
-  # This record is made anew each timestep (as opposed to the population_summary, which is just appended each timestep)
-  
-  transmission_record <-
-    data.frame(expand.grid(
-      "ID" = seq(1, samplesize, by = 1),
-      "timestep" = simulation_timesteps[i]
-    ))
-  transmission_record <-
-    transmission_record %>% mutate(
-      infection_year = 0,
-      infection_source = 0,
-      transmission = 0,
-      removal = 0
-    )
-  
-  
-  
+
   #### Removal or transmission ####
   
   transmission_record <- assess_removal(population_summary, transmission_record)
@@ -81,7 +73,7 @@ for (i in seq_along(simulation_timesteps)) {
   new_transmission_count <- sum(transmission_record$transmission)
   
   
-  
+
   #### Add newly infecteds ####
   
   if (new_transmission_count > 0) {
@@ -103,9 +95,19 @@ for (i in seq_along(simulation_timesteps)) {
     new_infecteds <- make_new_infecteds(new_transmission_count)
     population_summary <- rbind(population_summary, new_infecteds)
     #return(population_summary)
+    
+    
+    new_potential_sources <- data.frame("ID" = new_infecteds$ID, 
+                                        "timestep" = (new_infecteds$infection_year + timestep),
+                                        "transmission" =0, 
+                                        "removal" = 0)
+    transmission_record <- rbind(transmission_record, new_potential_sources)
+      
   }
   
 }
+
+
 
 str(population_summary)
 

@@ -25,7 +25,7 @@ make_new_infecteds <- function(n){
     "infection_source" = transmitters,
     "infection_year" = infection_times,
     # ADD in transmission rate modifier based on time since infection
-    "sampling_time" = NA,
+    "sampling_year" = NA,
     # timestep of removal = 1
     "cumulative_partners" = NA,
     "cumulative_transmissions" = NA
