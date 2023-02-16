@@ -4,15 +4,24 @@
 #library(ggplot2)
 
 
-#### Run scripts ####
+#### Initial parameters ####
 
-# Initial parameters
 #source("scripts/initial_parameters.R")
-samplesize <- 20
-sim_years <- 1
+samplesize <- 200
+sim_years <- 0.5
 timestep <- 1/52 #time-step in years; needs to be > 1/36.5 for homogeneous sims
-set.seed(42)
+set.seed(1234)
 
+# Transmission rate parameters (these are initial parameters, if using the heterogeneous transmission option)
+mean_partner_parameter <- 0.3  # parameters for gamma distribution for mean number of (susceptible) partners per timestep
+acts_per_day_parameter <- 1   # mean sex acts per day per partner 
+lambda_parameter <- 0.01  # mean risk of transmission given a sero-discordant contact (per-contact transmission prob.)
+
+# Removal rate parameter
+removal_rate_parameter <- 0 # expected length of time between infection and sampling = 1 year
+
+
+#### Scripts #### 
 
 # Functions needed to run the simulations
 source("scripts/assign_rates.R")   # Pulls in parameters from "initial_parameters.R"
@@ -52,9 +61,9 @@ population_summary <-
     "infection_source" = 0,
     "infection_year" = 0,
     
-    "sampling_year" = NA,
-    "cumulative_partners" = NA,
-    "cumulative_transmissions" = NA
+    "sampling_year" = 0,
+    "cumulative_partners" = 0,
+    "cumulative_transmissions" = 0
   )
 
 
@@ -64,14 +73,15 @@ population_summary <-
 transmission_record <- data.frame(expand.grid("ID" = seq(1, samplesize, by = 1), "timestep" = timestep))
 transmission_record <- transmission_record %>% mutate(transmission=0, removal=0)
 
-# Set up simulation loops
+
+#### Set up simulation loops ####
 
 simulation_timesteps <- seq(timestep, sim_years, by=timestep)
 
 for (i in seq_along(simulation_timesteps)) {
   
 
-  #### Removal or transmission ####
+  ### Removal or transmission ###
   
   transmission_record <- assess_removal(population_summary, transmission_record)
   transmission_record <- assess_transmission(population_summary, transmission_record)
@@ -79,7 +89,7 @@ for (i in seq_along(simulation_timesteps)) {
   
   
 
-  #### Add newly infecteds ####
+  ### Add newly infecteds ###
   
   if (new_transmission_count > 0) {
     
@@ -113,6 +123,7 @@ for (i in seq_along(simulation_timesteps)) {
 }
 
 
+#### Post-processing ####
 
 str(population_summary)
 
@@ -126,4 +137,16 @@ plot(aaa$infection_year, aaa$infection_source,
      pch = 16)
 
 sum(aaa$infection_source)
+
+
+
+#### Offspring distribution
+
+bbb <- table(population_summary$infection_source)
+bbb <- as.data.frame(bbb)
+hist(bbb$Freq, breaks = max(bbb$Freq),
+     xlim = c(0, max(bbb$Freq)),
+     xlab = "Transmissions per person",
+     ylab = "Count")
+summary(bbb$Freq)
 
