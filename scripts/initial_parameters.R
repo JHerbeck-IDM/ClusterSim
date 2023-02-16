@@ -12,13 +12,13 @@ timestep <- 1/52 #time-step in years; needs to be > 1/36.5 for homogeneous sims
 
 # Transmission rate parameters (these are initial parameters, if using the heterogeneous transmission option)
 
-mean_partner_parameter <- 0.4  # parameters for geom distribution for mean number of (susceptible) partners per timestep
+mean_partner_parameter <- 0.3  # parameters for gamma distribution for mean number of (susceptible) partners per timestep
 acts_per_day_parameter <- 1   # mean sex acts per day per partner 
 lambda_parameter <- 0.003  # mean risk of transmission given a sero-discordant contact (per-contact transmission prob.)
 
 
-# Removal/sampling rate paramter
+# Removal/sampling rate parameter
 
-removal_rate_parameter <- 1/4 # expected length of time between infection and sampling = 1 year
+removal_rate_parameter <- 1/1000 # expected length of time between infection and sampling = 1 year
 
 set.seed(42)

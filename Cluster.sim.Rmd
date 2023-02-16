@@ -20,8 +20,9 @@ Second order goal:  identify predictors of clustering patterns.
 
 With this modeling approach I am trying to keep it very simple--assess some contact
 network parameters without building a full contact network--and also be able to vary
-mean degree, per-contact transmission rate, sample fraction, sample bias, and
-sampling time after infection.
+mean degree (via partner number per timestep) and per-contact transmission rate in the 
+model, and then vary the sample fraction, sample bias, and
+sampling time after infection after the model has been run.
 
 ```{r LOAD LIBRARIES, include=FALSE}
 
@@ -29,26 +30,53 @@ library(dplyr)
 library(ggplot2)
 ```
 
+## Initial parameter inputs  
+
+```{r}
+
+samplesize <- 20
+sim_years <- 1
+timestep <- 1/52 #time-step in years; needs to be > 1/36.5 for homogeneous sims
+set.seed(42)
+```
+
+
+## Transmission rate parameters 
+(These are initial parameters, if using the heterogeneous transmission option)
+
+```{r}
+
+heterogeneous_risk <- 1     # if 0, all rates are the same for all individuals
+
+mean_partner_parameter <- 0.5  # parameters for geom distribution for mean number of (susceptible) partners per timestep
+acts_per_day_parameter <- 2   # mean sex acts per day per partner 
+lambda_parameter <- 0.003  # mean risk of transmission per sero-discordant contact
+
+# Removal rate parameter
+removal_rate_parameter <- 1/1000 # daily probability of being removed
+```
+
+
 ```{r FUNCTIONS}
 
-source("scripts/initial_parameters.R", local = knitr::knit_global())
+#source("scripts/initial_parameters.R", local = knitr::knit_global())
 source("scripts/assign_rates.R", local = knitr::knit_global())
 source("scripts/assess_removal.R", local = knitr::knit_global())
 source("scripts/assess_transmission.R", local = knitr::knit_global())
 source("scripts/make_new_infecteds.R", local = knitr::knit_global())
 ```
 
-## Initial parameter inputs  
 
-
-```{r ASSIGN HETEROGENEOUS RISK VALUES}
+```{r ASSIGN RISK VALUES}
 
 # Running the "assign_rates" function will make vectors of the 4 rates (in a list output) as long as "samplesize"
 # These vectors are then used to populate the rate variables in the new population_summary df, below.
 
 # This specific call (with "samplesize") is just for the initial population (the first time I make population_summary)
 
-rates <- assign_rates(samplesize)
+if(heterogeneous_risk == 1){
+  rates <- assign_heterogeneous_rates(samplesize)
+}
 ```
 
 
@@ -82,9 +110,6 @@ population_summary <-
   )
 
 # Assume all of these individuals are HIV-infected already
-
-#population_summary$transmission_risk_per_timestep = 1 - (1 - #population_summary$transmission_risk_per_act)^(population_summary$infectious_acts_per_timestep)
-
 ```
 
 
@@ -111,7 +136,7 @@ new_transmission_count <- sum(transmission_record$transmission)
 
 # Add newly infected individuals to the population_summary df
 
-rates <- assign_rates(new_transmission_count)
+rates <- assign_heterogeneous_rates(new_transmission_count)
 # Use "assign_rates" to make new heterogeneous rate vectors of new_transmission_count length
 
 transmitters <- transmission_record$ID[transmission_record$transmission == 1]

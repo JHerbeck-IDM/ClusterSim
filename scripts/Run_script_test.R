@@ -7,7 +7,12 @@
 #### Run scripts ####
 
 # Initial parameters
-source("scripts/initial_parameters.R")
+#source("scripts/initial_parameters.R")
+samplesize <- 20
+sim_years <- 1
+timestep <- 1/52 #time-step in years; needs to be > 1/36.5 for homogeneous sims
+set.seed(42)
+
 
 # Functions needed to run the simulations
 source("scripts/assign_rates.R")   # Pulls in parameters from "initial_parameters.R"
@@ -23,7 +28,7 @@ source("scripts/make_new_infecteds.R")
 
 # This specific call (with "samplesize" as input) is just for the initial population (the first time I make population_summary)
 
-rates <- assign_rates(samplesize)
+rates <- assign_heterogeneous_rates(samplesize)
 
 
 
@@ -79,7 +84,7 @@ for (i in seq_along(simulation_timesteps)) {
   if (new_transmission_count > 0) {
     
     # Append newly infected individuals to the "population_summary" data frame
-    rates <- assign_rates(new_transmission_count)
+    rates <- assign_heterogeneous_rates(new_transmission_count)
     # Use "assign_rates" to make new heterogeneous rate vectors of new_transmission_count length
     
     transmitters <-
@@ -111,12 +116,14 @@ for (i in seq_along(simulation_timesteps)) {
 
 str(population_summary)
 
-aa <- table(population_summary$infection_year)
-aa <- as.data.frame(aa)
-aa$year <- aa$Var1
-aa$infections <- aa$Freq
-plot(aa$year, aa$infections,
+population_summary$infection_source <- as.numeric(population_summary$infection_source)
+
+aaa <- aggregate(infection_source ~ infection_year, population_summary, length)
+
+plot(aaa$infection_year, aaa$infection_source,
      xlab = "Time in years",
-     ylab = "Infections")
-sum(aa$infections)
+     ylab = "Infections",
+     pch = 16)
+
+sum(aaa$infection_source)
 
