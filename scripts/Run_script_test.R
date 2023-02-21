@@ -8,8 +8,8 @@
 
 #source("scripts/initial_parameters.R")
 samplesize <- 200
-sim_years <- 0.5
-timestep <- 1/52 #time-step in years; needs to be > 1/36.5 for homogeneous sims
+timestep <- 1 #time-step in days
+sim_years <- timestep*365
 set.seed(1234)
 
 # Transmission rate parameters (these are initial parameters, if using the heterogeneous transmission option)
@@ -18,7 +18,7 @@ acts_per_day_parameter <- 1   # mean sex acts per day per partner
 lambda_parameter <- 0.01  # mean risk of transmission given a sero-discordant contact (per-contact transmission prob.)
 
 # Removal rate parameter
-removal_rate_parameter <- 0 # expected length of time between infection and sampling = 1 year
+removal_rate_parameter <- 0 # per day; expected length of time between infection and sampling?
 
 
 #### Scripts #### 
@@ -46,17 +46,18 @@ rates <- assign_heterogeneous_rates(samplesize)
 population_summary <-
   data.frame(
     "ID" = seq(1, samplesize, by = 1), # samplesize is from above parameter inputs (total trial pop size)
-    "removal_rate" = rates$removal_rate,
-    "partners" = rates$partners,
+    "removal_rate" = rates$removal_rate, # per day
+    "partners" = rates$partners, # partners per day
     "acts_per_day" = rates$acts_per_day,
     "transmission_risk_per_act" = rates$lambda,
     
-    #"acts_per_timestep" = floor(rates$acts_per_day * (rates$timestep * 365) * rates$partners), # 1 is fraction susceptible
+    #"acts_per_timestep" = floor(rates$acts_per_day * (rates$timestep * 365) * rates$partners)
     # Whatever the timestep is, this "acts_per_day*(timestep*365)" will report out in days
     # Which is necessary because "acts_per_day" is in "days" units (contacts per day)
     
-    "transmission_risk_per_timestep" = 1 - (1 - rates$lambda) ^
-      floor(rates$acts_per_day * (timestep * 365) * rates$partners),
+    "transmission_risk_per_day" = 1 - (1 - rates$lambda) ^
+      floor(rates$acts_per_day * rates$partners),
+    
     # 1 - (1 - population_summary$transmission_risk_per_act)^(population_summary$acts_per_timestep)
     "infection_source" = 0,
     "infection_year" = 0,
