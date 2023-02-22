@@ -21,13 +21,13 @@ assign_heterogeneous_rates <- function(n) {
   
   ##### EXTINCTION RATE
   # This is lineage extinction, removal, or sampling and going on ART
-  removal_rate <- c(rep(removal_rate_parameter, n)) #per day
+  removal_rate <- c(rep(removal_rate_parameter, n)) # per day
   # "mean_partners" is from the "initial_parameters.R" script
   # wait time is 1 year until sampling
   
   ##### NUMBER OF PARTNERS
   # geometric distribution (no need for using "floor()" with exponential distribution, then)
-  partners <- rgeom(n = n, prob = mean_partner_parameter)
+  partners <- rgeom(n = n, prob = mean_partner_parameter) # per day
   
   # gamma distribution
   # partners <- rgamma(n = n, shape = 0.5, rate = 0.5 )
