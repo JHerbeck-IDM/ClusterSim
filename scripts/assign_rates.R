@@ -17,6 +17,8 @@
 
 # This function is called only with "heterogeneous_risk == 1" 
 
+# (n) is the number of individuals that need these parameters
+
 assign_heterogeneous_rates <- function(n) {
   
   ##### EXTINCTION RATE

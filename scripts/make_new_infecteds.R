@@ -7,6 +7,9 @@
 # rates <- assign_rates(new_transmission_count)
 # transmitters <- transmission_record$ID[transmission_record$transmission == 1]
 
+# (n) is the number of individuals that need to be added to population_summary
+# This number will be the "new_transmission_count"
+
 make_new_infecteds <- function(n){
   
   df <- data.frame(
@@ -20,14 +23,17 @@ make_new_infecteds <- function(n){
     # Whatever the timestep is, this "acts_per_day*(timestep*365)" will report out in days
     # Which is necessary because "acts_per_day" is in "days" units (contacts per day)
     
-    "transmission_risk_per_day" = 1 - (1 - rates$lambda) ^
-      floor(rates$acts_per_day * rates$partners),
+    #"transmission_risk_per_day" = 1 - (1 - rates$lambda) ^
+    #  floor(rates$acts_per_day * rates$partners),
+    
+    "transmission_risk_per_day" = 0.5,
     
     # 1 - (1 - population_summary$transmission_risk_per_act)^(population_summary$acts_per_timestep)
-    "infection_source" = 0,
-    "infection_year" = 0,
     
-    "sampling_year" = 0,
+    "infection_source" = transmitters,
+    "infection_day" = infection_days,
+    
+    "sampling_day" = 0,
     "cumulative_partners" = 0,
     "cumulative_transmissions" = 0
   )
