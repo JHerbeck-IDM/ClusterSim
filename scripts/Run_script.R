@@ -24,10 +24,10 @@ removal_rate_parameter <- 0 # per day; expected length of time between infection
 #### Scripts #### 
 
 # Functions needed to run the simulations
-source("scripts/assign_rates.R")   # Pulls in parameters from "initial_parameters.R"
-source("scripts/assess_removal.R")
-source("scripts/assess_transmission.R")
-source("scripts/make_new_infecteds.R")
+source("scripts/assign_rates.R")   # pulls in parameters from "initial_parameters.R"
+source("scripts/assess_removal.R")  # function to see if individuals are removed from the pop each timestep
+source("scripts/assess_transmission.R") # function to see if individuals transmit each timestep
+source("scripts/make_new_infecteds.R") # function to add new infected to "population_summary" df
 
 
 #### Assign heterogeneous risk values ####
