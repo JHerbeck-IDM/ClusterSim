@@ -2,12 +2,6 @@
 
 Josh Herbeck
 
-## Notes / To do list:
-
-1. Add in transmission rate modifier based on time since infection?
-
-2. Currently the transmission_risk_per_day parameter combines the risk across all partners; it doesn't allow an individual to transmit multiple times (to multiple different partners). Probably need to fix that if and only if we use timesteps greater than 1 day
-
 ## Overview
 
 This is a simple branching model of HIV transmission. There is no contact/sexual 
@@ -65,8 +59,15 @@ The model includes some core functions:
 * *make_new_infections*
 
 
+### How to run the model
 
-### BUGS
 
-I think the **Transmission_record** is not working like I think it is. 
+
+
+## Notes / To do list:
+
+1. Add in transmission rate modifier based on time since infection?
+
+2. Currently the transmission_risk_per_day parameter combines the risk across all partners; it doesn't allow an individual to transmit multiple times in the same timestep. Might need to fix that if and only if we use timesteps greater than 1 day
+
 

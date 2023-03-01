@@ -19,16 +19,10 @@ make_new_infecteds <- function(n){
     "acts_per_day" = rates$acts_per_day,
     "transmission_risk_per_act" = rates$lambda,
     
-    #"acts_per_timestep" = floor(rates$acts_per_day * (rates$timestep * 365) * rates$partners)
-    # Whatever the timestep is, this "acts_per_day*(timestep*365)" will report out in days
-    # Which is necessary because "acts_per_day" is in "days" units (contacts per day)
-    
-    #"transmission_risk_per_day" = 1 - (1 - rates$lambda) ^
-    #  floor(rates$acts_per_day * rates$partners),
-    
-    "transmission_risk_per_day" = 0.5,
-    
+    "transmission_risk_per_day" = 1 - (1 - rates$lambda)^(rates$acts_per_day * rates$partners),
     # 1 - (1 - population_summary$transmission_risk_per_act)^(population_summary$acts_per_timestep)
+    
+    #"transmission_risk_per_day" = 0.5, # This was just a setting I used in QA/QC
     
     "infection_source" = transmitters,
     "infection_day" = infection_days,

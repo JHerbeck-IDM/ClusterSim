@@ -7,7 +7,7 @@ assess_transmission <- function(df1, df2) {
     for (i in 1:nrow(df2)) {
       df2$transmission[i] <- ifelse(
         df2$removal[i] == 0 &&
-          # Individuals can't be removed and transmit (i.e. if they == 1)
+          # Individuals can't be removed and transmit (i.e. if $removal == 1)
           runif(1, min = 0, max = 1) < df1$transmission_risk_per_day[i],
         1,
         0
