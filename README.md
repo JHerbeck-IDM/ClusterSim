@@ -10,7 +10,7 @@ Josh Herbeck
 
 ## Overview
 
-This is a simple quasi-branching model of HIV transmission. There is no contact/sexual 
+This is a simple branching model of HIV transmission. There is no contact/sexual 
 network created, and there are no uninfected individuals; the model just has infected
 individuals who can transmit, and then the newly infected recipients who can transmit, 
 and so forth through time. The output is a transmission record (line list) that 
@@ -34,7 +34,12 @@ patterns from those variables.
 
 ## Model structure
 
-The model is basically two data frames:  **population_summary** and **transmission_record.**
+The model is basically two data frames:  **population_summary** and **transmission_record**, 
+a creatively-named run script "Run_script.R", and some functions that are initiated
+through a few scripts (see below).
+
+A user should be able to just run the Run_script.R in order to get a line list 
+of transmissions (extractable in the Population_summary).
 
 **Population_summary** includes all individuals in the population and their individual 
 data. These data include their transmission parameters, infection date, infection 

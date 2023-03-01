@@ -354,7 +354,7 @@ display: none;
 
 <div id="clustersim" class="section level1">
 <h1>ClusterSim</h1>
-<p>README</p>
+<p>Josh Herbeck</p>
 <div id="notes-to-do-list" class="section level2">
 <h2>Notes / To do list:</h2>
 <ol style="list-style-type: decimal">
@@ -391,14 +391,24 @@ patterns from those variables.</p>
 </div>
 <div id="model-structure" class="section level2">
 <h2>Model structure</h2>
-<p>The model is basically two data frames: “population_summary” and
-“transmission_record.”</p>
-<p>“Population_summary” includes all individuals in the population and
-their individual data. These data include their transmission parameters,
-infection date, infection source, sampling/removal year, and cumulative
-partners and transmissions.</p>
-<p>“Transmission_record” is a simple record of whether each individual
-is removed or transmits for each timestep.</p>
+<p>The model is basically two data frames:
+<strong>population_summary</strong> and
+<strong>transmission_record</strong>, a creatively-named run script
+“Run_script.R”, and some functions that are initiated through a few
+scripts (see below).</p>
+<p>A user should be able to just run the Run_script.R in order to get a
+line list of transmissions (extractable in the Population_summary).</p>
+<p><strong>Population_summary</strong> includes all individuals in the
+population and their individual data. These data include their
+transmission parameters, infection date, infection source,
+sampling/removal year, and cumulative partners and transmissions. This
+file structure is cribbed from Adam’s agent-based vaccine trial model;
+the difference between Adam’s model and this one is that the vaccine
+trial was interested in infections and this model is (mostly) interested
+in transmissions (and in recording each transmission for downstream
+use).</p>
+<p><strong>Transmission_record</strong> is a simple record of whether
+each individual is removed or transmits for each timestep.</p>
 <p>The model includes some core functions:</p>
 <ul>
 <li><p><em>assign_heterogeneous_rates</em></p></li>
@@ -407,6 +417,11 @@ is removed or transmits for each timestep.</p>
 <li><p><em>assess_transmission</em></p></li>
 <li><p><em>make_new_infections</em></p></li>
 </ul>
+<div id="bugs" class="section level3">
+<h3>BUGS</h3>
+<p>I think the <strong>Transmission_record</strong> is not working like
+I think it is.</p>
+</div>
 </div>
 </div>
 
