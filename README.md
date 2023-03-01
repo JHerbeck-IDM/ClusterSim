@@ -1,36 +1,67 @@
 # ClusterSim
 
-README placeholder
+Josh Herbeck
 
-Notes / To do list:
+## Notes / To do list:
 
-1. Currently the transmission_risk_per_timestep parameter combines the risk across all partners; it doesn't allow an individual to transmit multiple times (to multiple different partners). Probably need to fix that.
+1. Add in transmission rate modifier based on time since infection?
 
-2. Need to add in the homogeneous or heterogeneous risk flag
-
-3. Add in transmission rate modifier based on time since infection?
-
+2. Currently the transmission_risk_per_day parameter combines the risk across all partners; it doesn't allow an individual to transmit multiple times (to multiple different partners). Probably need to fix that if and only if we use timesteps greater than 1 day
 
 ## Overview
 
-Simple model of HIV transmission, to create a transmission line list to use
-in studies of phylogenetic clustering. We simulate HIV epidemic spread with 
-different assumptions about the resulting transmission network.  
-Each individual has rate of transmission, and this is a combination of contact rate 
-and per-contact rate of transmission. There also individual rates of sampling 
-(functionally this is removal/extinction).
+This is a simple quasi-branching model of HIV transmission. There is no contact/sexual 
+network created, and there are no uninfected individuals; the model just has infected
+individuals who can transmit, and then the newly infected recipients who can transmit, 
+and so forth through time. The output is a transmission record (line list) that 
+we can use to make phylogenies and identify clusters.
 
-First order goal:  understand if high mean degree (or "super-spreading" or a small 
-core group) is associated with more clustering and bigger clusters. 
+Each individual has a probability of transmission per timestep, and this probability 
+is a combination of contact rate (number of sexual partners per timestep) and the 
+per-contact rate of transmission. There is also an individual rate of sampling 
+(functionally this is the probability of removal/extinction).
 
-Second order goal:  identify predictors of clustering patterns.
+First order goal:  to understand if high mean degree ("super-spreading", or a 
+small-ish high risk core group/key population) is associated with more clustering 
+and bigger clusters. 
 
-With this modeling approach I am trying to keep it very simple--assess some contact
-network parameters without building a full contact network--and also be able to vary
-mean degree, per-contact transmission rate, sample fraction, sample bias, and
-sampling time after infection.
+Second order goal:  identify general predictors of clustering patterns (i.e. make a
+simple, fast model with which I can vary offspring distribution, incidence/force 
+of infection, sampling (sampling time after infection, sample fraction/coverage, and
+sampling bias), and cluster thresholds and build a function for predicting clustering
+patterns from those variables.
 
-We assume all of these individuals are HIV-infected already.
+
+## Model structure
+
+The model is basically two data frames:  **population_summary** and **transmission_record.**
+
+**Population_summary** includes all individuals in the population and their individual 
+data. These data include their transmission parameters, infection date, infection 
+source, sampling/removal year, and cumulative partners and transmissions. This file
+structure is cribbed from Adam's agent-based vaccine trial model; the difference
+between Adam's model and this one is that the vaccine trial was interested in 
+infections and this model is (mostly) interested in transmissions (and in recording
+each transmission for downstream use).
+
+**Transmission_record** is a simple record of whether each individual is removed or
+transmits for each timestep. 
+
+The model includes some core functions:
+
+* *assign_heterogeneous_rates*
+
+* *assign_homogeneous_rates*
+
+* *assess_removal*
+
+* *assess_transmission*
+
+* *make_new_infections*
 
 
+
+### BUGS
+
+I think the **Transmission_record** is not working like I think it is. 
 

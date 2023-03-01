@@ -66,8 +66,8 @@ population_summary <-
     "infection_day" = 0,
     
     "sampling_day" = 0,
-    "cumulative_partners" = 0,
-    "cumulative_transmissions" = 0
+    "cumulative_partners" = 0,  # Haven't added this code yet
+    "cumulative_transmissions" = 0 # Haven't added this code yet
   )
 
 
