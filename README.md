@@ -55,7 +55,7 @@ The model includes some core functions:
 * *make_new_infections*
 
 
-### How to run the model
+## How to run the model
 
 Basically you just need to open up *Run_script.R*, modify the parameters listed below
 as you see fit, and source the Run script.
