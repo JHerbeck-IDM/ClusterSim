@@ -9,11 +9,11 @@
 #source("scripts/initial_parameters.R")
 samplesize <- 1000
 timestep <- 1    # timestep in days
-sim_time <- timestep*200
+sim_time <- timestep*365
 set.seed(runif(1, min = 0, max = 100))
 
 # Transmission rate parameters (these are initial parameters, if using the heterogeneous transmission option)
-mean_partner_parameter <- 0.5  # parameters for gamma distribution for mean number of (susceptible) partners per timestep
+mean_partner_parameter <- 0.5  # parameter for gamma distribution for mean (susceptible) partners per timestep
 acts_per_day_parameter <- 1   # mean sex acts per day per partner 
 lambda_parameter <- 0.02  # mean risk of transmission given a sero-discordant contact (per-contact transmission prob.)
 

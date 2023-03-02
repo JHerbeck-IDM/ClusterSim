@@ -49,19 +49,26 @@ transmits for each timestep.
 The model includes some core functions:
 
 * *assign_heterogeneous_rates*
-
 * *assign_homogeneous_rates*
-
 * *assess_removal*
-
 * *assess_transmission*
-
 * *make_new_infections*
 
 
 ### How to run the model
 
+Basically you just need to open up *Run_script.R*, modify the parameters listed below
+as you see fit, and source the Run script.
 
+Initial input parameters:
+
+samplesize
+timestep 
+sim_time 
+mean_partner_parameter 
+acts_per_day_parameter 
+lambda_parameter
+removal_rate_parameter
 
 
 ## Notes / To do list:
