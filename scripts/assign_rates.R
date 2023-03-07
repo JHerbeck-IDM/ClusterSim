@@ -99,7 +99,7 @@ assign_changing_rates <- function(n) {
   scale <- lambda / shape_gamma  # scale parameter
   # These initial shape and scale give a gamma distribution that is pretty symmetrical, with min = 0.001, max = 0.003
   lambda.high <- 10*(rgamma(n = n, shape = shape_gamma, scale = scale))
-  lambda.low <- 1*rgamma(n = n, shape = shape_gamma, scale = scale)
+  lambda.low <- 0.8*rgamma(n = n, shape = shape_gamma, scale = scale)
 
   lambda <-   if (i <= 0.5*365) {
     lambda.high
