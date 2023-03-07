@@ -6,13 +6,15 @@ Josh Herbeck
 
 This is a simple branching model of HIV transmission. There is no contact/sexual 
 network created, and there are no uninfected individuals; the model just has infected
-individuals who can transmit, and then the newly infected recipients who can transmit, 
+individuals who can transmit, and then these newly infected recipients can transmit, 
 and so forth through time. The output is a transmission record (line list) that 
 we can use to make phylogenies and identify clusters.
 
-Each individual has a probability of transmission per timestep, and this probability 
-is a combination of contact rate (number of sexual partners per timestep) and the 
-per-contact rate of transmission. There is also an individual rate of sampling 
+The branching process is kind of mechanistic, relative to other branching process 
+process models:  Each individual has a probability of transmission per timestep, 
+and this probability is a combination of the contact rate (number of sexual partners 
+per timestep), the number of sex acts per day (per contact/partner), and the per-act 
+probability of transmission. There is also an individual rate of sampling 
 (functionally this is the probability of removal/extinction).
 
 First order goal:  to understand if high mean degree ("super-spreading", or a 
