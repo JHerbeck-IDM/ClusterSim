@@ -9,16 +9,16 @@
 #source("scripts/initial_parameters.R")
 samplesize <- 1000
 timestep <- 1    # timestep in days
-sim_time <- timestep*365
+sim_time <- timestep*3*365
 set.seed(runif(1, min = 0, max = 100))
 
 # Transmission rate parameters (these are initial parameters, if using the heterogeneous transmission option)
 mean_partner_parameter <- 0.5  # parameter for gamma distribution for mean (susceptible) partners per timestep
-acts_per_day_parameter <- 1   # mean sex acts per day per partner 
-lambda_parameter <- 0.02  # mean risk of transmission given a sero-discordant contact (per-contact transmission prob.)
+acts_per_day_parameter <- 1   # acts per day per partner for exponential distribution (mean = 0.6)
+lambda_parameter <- 0.002    # mean risk of transmission given a sero-discordant contact (per-contact transmission prob.)
 
 # Removal rate parameter
-removal_rate_parameter <- 0.01 # per day; expected length of time between infection and sampling?
+removal_rate_parameter <- 0.005 # per day; expected length of time between infection and sampling?
                             # This needs to be 1) used, and 2) calibrated
 
 
@@ -85,7 +85,7 @@ for (i in seq_along(simulation_timesteps)) {
   
   loop_timesteps <- c(loop_timesteps, i)
   
-  transmission_record$timestep <- i
+  transmission_record$timestep <- i  # Update the timestep in the transmission record
   
   
   ### Removal or transmission ###
@@ -100,7 +100,7 @@ for (i in seq_along(simulation_timesteps)) {
   if (new_transmission_count > 0) {
     
     # Append newly infected individuals to the "population_summary" data frame
-    rates <- assign_heterogeneous_rates(new_transmission_count)
+    rates <- assign_changing_rates(new_transmission_count)
     # Use "assign_rates" to make new heterogeneous rate vectors of new_transmission_count length
     
     transmitters <- transmission_record$ID[transmission_record$transmission == 1]
@@ -110,7 +110,7 @@ for (i in seq_along(simulation_timesteps)) {
     # the "rates", "transmitters", "removed", and "infection_times" vectors are used
     # in the "make_new_infected()" function to fill in variables
     
-    new_infecteds <- make_new_infecteds(new_transmission_count) # makes new df to add to population_summary
+    new_infecteds <- make_new_infecteds(new_transmission_count, i) # makes new df to add to population_summary
     population_summary <- rbind(population_summary, new_infecteds)
     #return(population_summary)
     
