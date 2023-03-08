@@ -8,6 +8,7 @@ library(phydynR)
 # "infection_day" variable is in a format that can be parsed by R's as.Date() function.
 
 transmissions <- population_summary[ , c(1, 7, 8)]
+transmissions$infection_day <- as.Date(transmissions$infection_day, origin = "1970-01-01")
 
 # Convert the transmission data to a transmission tree object
 trans_tree <- from_treetable(transmissions, 

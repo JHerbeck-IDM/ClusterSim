@@ -7,7 +7,7 @@
 #### Initial parameters ####
 
 #source("scripts/initial_parameters.R")
-samplesize <- 1000
+samplesize <- 10
 timestep <- 1    # timestep in days
 sim_time <- timestep*5*365
 set.seed(runif(1, min = 0, max = 100))
