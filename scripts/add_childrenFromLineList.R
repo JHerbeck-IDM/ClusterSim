@@ -28,7 +28,8 @@ add_childrenFromLineList <- function(node, lineList, ID, infectorID, infectTime,
   children <- linelist$ID[linelist$infection_source == node_name]
   times <- list()
   for (child_name in children) {
-    child <- node$add_child(name = child_name)
+    
+    child <- temp_tree$add_child(name = child_name)
     idx <- linelist$ID == child_name
     child$add_feature('time', linelist[idx, infectTime][1])
     child$add_feature('infectTime', linelist[idx, infectTime][1])

@@ -29,6 +29,8 @@ assign_heterogeneous_rates <- function(n) {
   # geometric distribution (no need for using "floor()" with exponential distribution, then)
   partners <- rgeom(n = n, prob = mean_partner_parameter) # per day
   
+  # Try a discrete Pareto distribution?
+  
   # gamma distribution
   # partners <- rgamma(n = n, shape = 0.5, rate = 0.5 )
   # "mean_partners" is from the "initial_parameters.R" script
@@ -99,8 +101,11 @@ assign_changing_rates <- function(n) {
   scale <- lambda / shape_gamma  # scale parameter
   # These initial shape and scale give a gamma distribution that is pretty symmetrical, with min = 0.001, max = 0.003
   lambda.high <- 10*(rgamma(n = n, shape = shape_gamma, scale = scale))
-  lambda.low <- 0.8*rgamma(n = n, shape = shape_gamma, scale = scale)
+  lambda.low <- 0.5*rgamma(n = n, shape = shape_gamma, scale = scale)
 
+  # Right now this changing lambda only affects new individuals, and the seed population
+  # keeps their lambda.high. I should change this, I think.
+  
   lambda <-   if (i <= 0.5*365) {
     lambda.high
   } else {
