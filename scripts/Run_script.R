@@ -6,7 +6,6 @@
 
 #### Initial parameters ####
 
-#source("scripts/initial_parameters.R")
 samplesize <- 1000
 timestep <- 1    # timestep in days
 sim_time <- timestep*5*365
@@ -101,7 +100,10 @@ for (i in seq_along(simulation_timesteps)) {
     
     # Append newly infected individuals to the "population_summary" data frame
     rates <- assign_changing_rates(new_transmission_count)
-    # Use "assign_rates" to make new heterogeneous rate vectors of new_transmission_count length
+    # Use "assign_changing_rates" to make new heterogeneous rate vectors of 
+    # new_transmission_count length
+    # This specific function (different from the initial call above) changes 
+    # the lambda at a user-specified time
     
     transmitters <- transmission_record$ID[transmission_record$transmission == 1]
     removed <- transmission_record$ID[transmission_record$removal == 1]
