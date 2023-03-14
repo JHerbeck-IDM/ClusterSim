@@ -19,7 +19,9 @@ probability of transmission. There is also an individual rate of sampling
 
 First order goal:  to understand if high mean degree ("super-spreading", or a 
 small-ish high risk core group/key population) is associated with more clustering 
-and bigger clusters. 
+and bigger clusters. Or, identify processes that produce the clustering patterns 
+that we see in MSM and heterosexual data sets (with the knowledge that many
+processes can produce similar distributions).
 
 Second order goal:  identify general predictors of clustering patterns (i.e. make a
 simple, fast model with which I can vary offspring distribution, incidence/force 

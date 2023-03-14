@@ -6,15 +6,15 @@
 
 #### Initial parameters ####
 
-samplesize <- 1000
+samplesize <- 100
 timestep <- 1    # timestep in days
-sim_time <- timestep*5*365
+sim_time <- timestep*10*365
 set.seed(runif(1, min = 0, max = 100))
 
 # Transmission rate parameters (these are initial parameters, if using the heterogeneous transmission option)
 mean_partner_parameter <- 0.5  # parameter for gamma distribution for mean (susceptible) partners per timestep
-acts_per_day_parameter <- 0.5   # acts per day per partner for exponential distribution (mean = 0.6)
-lambda_parameter <- 0.002    # mean risk of transmission given a sero-discordant contact (per-contact transmission prob.)
+acts_per_day_parameter <- 0.3   # acts per day per partner for exponential distribution (mean = 0.6)
+lambda_parameter <- 0.003    # mean risk of transmission given a sero-discordant contact (per-contact transmission prob.)
 
 # Removal rate parameter
 removal_rate_parameter <- 0.005 # per day; expected length of time between infection and sampling?
@@ -114,8 +114,6 @@ for (i in seq_along(simulation_timesteps)) {
     
     new_infecteds <- make_new_infecteds(new_transmission_count, i) # makes new df to add to population_summary
     population_summary <- rbind(population_summary, new_infecteds)
-    #return(population_summary)
-    
     
     new_potential_sources <- data.frame("ID" = new_infecteds$ID, 
                                         "timestep" = (new_infecteds$infection_day + timestep),
