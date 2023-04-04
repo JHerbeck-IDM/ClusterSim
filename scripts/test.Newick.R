@@ -7,6 +7,8 @@ lineList <- read.csv("line_list.csv")
 # and the second term being your original parentheses. 
 # Do this iteratively for every source.
 
+lineList <- lineList[order(lineList$infectionTime), ]
+
 tree <- NULL
 
 # iterate over rows
@@ -18,6 +20,21 @@ for (i in nrow(lineList):1) {
   
   # create new parenthetic pair with source and recipient
   Pair <- paste0("(", source, ",", recipient, ")")
+  
+  tree <- c(tree, Pair)
+  
+  if ( (lineList$source[i] %in% tree,
+       
+       Pair <- paste0("(", source, ",", recipient, ")")
+       )
+    
+    # create new parenthetic pair with source and recipient
+    Pair <- paste0("(", source, ",", recipient, ")")
+  
+    
+    
+  # add it to the tree
+  tree <- c(tree, Pair)
   
   # check if source is also a recipient
   if (source %in% lineList$recipient) {
@@ -36,6 +53,10 @@ for (i in nrow(lineList):1) {
   
 }
 
-Newick_string
+test = "(1, ((2, ((4, 7), (6, 8))), (3, 5)));"
+tree <- ape::read.tree(text = test)
+plot(tree)
+
+
 # "((4,6),8)" "((2,4),7)" "((2,4),6)" "((2,3),5)" "((1,2),4)" "((1,2),3)" "((0,1),2)" "((0,1),2)"
-# e vg
+# ((1, ((2, ((4, 7), (6, 8))), ((3, 5)))))
