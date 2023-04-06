@@ -2,18 +2,6 @@
 
 lineList <- read.csv("line_list.csv")
 
-#lineList <- tribble(
-#  ~source, ~dest,
-#  0,1,
-#  1,2,
-#  2,3,
-#  2,4,
-#  3,5,
-#  4,6,
-#  4,7,
-#  6,8)
-
-#lineList <- lineList[order(lineList$infectionTime), ]
 
 recurhelper <- function(source) {
   # assumes sources are sorted
@@ -51,9 +39,11 @@ recur2 <- function(source) {
     NULL # error
   }
 }
+
 headnode <- lineList$recipient[lineList$source == 0]
 
 test <- print(paste0(recur2(headnode), ";"))
 
 tree <- ape::read.tree(text = test)
 
+plot(tree)
