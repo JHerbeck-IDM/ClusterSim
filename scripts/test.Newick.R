@@ -23,6 +23,7 @@ for (i in nrow(lineList):1) {
   
   tree <- c(tree, Pair)
   
+  # If new source is not already in tree
   if ( (lineList$source[i] %in% tree,
        
        Pair <- paste0("(", source, ",", recipient, ")")

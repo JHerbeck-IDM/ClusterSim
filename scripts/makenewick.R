@@ -1,7 +1,10 @@
 # makenewick.R
 # outputs a Newick representation of a tree based on a line list
+# Dennis Chao
 # for Josh Herbeck
 # April 2023
+
+lineList <- read.csv("line_list.csv")
 
 makenewickstring <- function(source, lineList) {
   # takes the head node(s) as an argument ("source")
@@ -68,47 +71,6 @@ makenewickstring <- function(source, lineList) {
   }
 }
 
-# working example
-library(tidyr) # this is needed just to make the sample data
-sampleLineList <- tribble(
-  ~ source,
-  ~ recipient,
-  ~ infectionTime,
-  ~ sampleTime,
-  0,
-  1,
-  1,
-  3,
-  1,
-  2,
-  2,
-  5,
-  2,
-  3,
-  4,
-  6,
-  #    2,10,10,12,
-  2,
-  4,
-  5,
-  9,
-  3,
-  5,
-  6,
-  7,
-  4,
-  6,
-  7,
-  9,
-  4,
-  7,
-  8,
-  9,
-  6,
-  8,
-  9,
-  10
-)
-
 headnode <- sampleLineList$recipient[sampleLineList$source == 0]
+
 print(paste0(makenewickstring(headnode, sampleLineList), ";"))
