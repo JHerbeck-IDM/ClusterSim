@@ -4,7 +4,10 @@
 # for Josh Herbeck
 # April 2023
 
+lineList <- read.csv("CopyOfline_list.csv")
 lineList <- read.csv("line_list.csv")
+
+lineList <- order(lineList, decreasing = TRUE)
 
 makenewickstring <- function(source, lineList) {
   # takes the head node(s) as an argument ("source")
@@ -71,6 +74,9 @@ makenewickstring <- function(source, lineList) {
   }
 }
 
-headnode <- sampleLineList$recipient[sampleLineList$source == 0]
+headnode <- sampleLineList$recipient[lineList$source == 0]
 
-print(paste0(makenewickstring(headnode, sampleLineList), ";"))
+test <- print(paste0(makenewickstring(headnode, lineList), ";"))
+test <- "(1:1,((2:-4,9:2):1,(((4:1,7:1):1,(6:0,8:1):2):2,(3:0,5:1):2):10):2):1;"
+tree <- ape::read.tree(text = test)
+plot(tree)
