@@ -80,14 +80,6 @@ assign_changing_rates <- function(n) {
   # geometric distribution (no need for using "floor()" with exponential distribution, then)
   partners <- rgeom(n = n, prob = mean_partner_parameter) # per day
   
-  # gamma distribution
-  # partners <- rgamma(n = n, shape = 0.5, rate = 0.5 )
-  # "mean_partners" is from the "initial_parameters.R" script
-  # hist(partners, xlab = "Partners per timestep", main = "Number of partners per timestep")
-  # mean(partners)
-  
-  # Maybe we need a negative binomial? geometric is more overdispersed I think
-  
   ##### NUMBER OF SEXUAL CONTACTS PER DAY
   # set an exponential distribution on number of contacts per day
   acts_per_day <- rexp(n = n, rate = 1 / acts_per_day_parameter)
