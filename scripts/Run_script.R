@@ -5,19 +5,19 @@ require(dplyr)
 
 #### Initial parameters ####
 
-samplesize <- 10
+samplesize <- 50
 timestep <- 1    # timestep in days
 sim_time <- timestep*2*365
 #set.seed(runif(1, min = 0, max = 100))
-set.seed(44)
+set.seed(45)
 
 # Transmission rate parameters (these are initial parameters, if using the heterogeneous transmission option)
 mean_partner_parameter <- 0.5  # parameter for gamma distribution for mean (susceptible) partners per timestep
-acts_per_day_parameter <- 0.3   # acts per day per partner for exponential distribution (mean = 0.6)
+acts_per_day_parameter <- 0.3   # acts per day per partner for exponential distribution (mean)
 lambda_parameter <- 0.005   # mean risk of transmission given a sero-discordant contact (per-contact transmission prob.)
 
 # Removal rate parameter
-removal_rate_parameter <- 0.005 # per day; expected length of time between infection and sampling?
+removal_rate_parameter <- 0.003 # per day; expected length of time between infection and viral suppression?
                             # This needs to be 1) used, and 2) calibrated
 
 
@@ -33,14 +33,15 @@ source("scripts/make_new_infecteds.R")
 
 #### Assign heterogeneous risk values ####
 
-# Running the "assign_rates" function will make vectors of the 4 rates (in a list output), as long as "samplesize"
-# These vectors are then used to populate the rate variables in the population_summary df, below.
+# Running the "assign__heterogeneous_rates" function will make vectors of the 4 rates (in a list output), 
+# as long as "samplesize"
+# These vectors are used to populate the rate variables in the "population_summary" df, below.
 
 # This specific call (with "samplesize" as input) is just for the initial population 
-# (the first time population_summary is made)
+# (the first time "population_summary" is made)
 
 rates <- assign_heterogeneous_rates(samplesize)
-
+#rates <- assign_changing_rates(samplesize)
 
 
 #### Create the initial population ####
@@ -61,18 +62,19 @@ population_summary <-
     
     "infection_source" = NA,
     "infection_day" = NA,
-    
     "sampling_day" = 0,
-    "cumulative_partners" = 0,  # Haven't added this code yet
-    "cumulative_transmissions" = 0 # Haven't added this code yet
+    
+    "cumulative_partners" = 0,      # To add
+    "cumulative_transmissions" = 0   # To add
   )
 
 
 # Create shell for "transmission record," gives each individual ID their own set of timestep rows
-# This record is made anew each timestep (as opposed to the population_summary, which is just appended each timestep)
+# This record is made anew each timestep (as opposed to the "population_summary," which is just appended each timestep)
 
 transmission_record <- data.frame(expand.grid("ID" = seq(1, samplesize, by = 1), "timestep" = timestep-1))
 transmission_record <- transmission_record %>% mutate(removal=0, transmission=0)
+
 
 
 #### Simulation loops ####
@@ -84,7 +86,6 @@ loop_timesteps <- NULL # Just to make sure we were looping through all timesteps
 for (i in seq_along(simulation_timesteps)) {
   
   loop_timesteps <- c(loop_timesteps, i)
-  
   transmission_record$timestep <- i  # Update the timestep in the transmission record
   
   
@@ -103,8 +104,8 @@ for (i in seq_along(simulation_timesteps)) {
     rates <- assign_changing_rates(new_transmission_count)
     # Use "assign_changing_rates" to make new heterogeneous rate vectors of 
     # new_transmission_count length
-    # This specific function (different from the initial call above) changes 
-    # the lambda at a user-specified time
+    # This specific function (different from the initial "heterogeneous_rate" function above) changes 
+    # the lambda at a user-specified time, in order to get a stable epidemic
     
     transmitters <- transmission_record$ID[transmission_record$transmission == 1]
     removed <- transmission_record$ID[transmission_record$removal == 1]

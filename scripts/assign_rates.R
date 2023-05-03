@@ -26,7 +26,7 @@ assign_heterogeneous_rates <- function(n) {
   # wait time is 1 year until sampling
   
   ##### NUMBER OF PARTNERS
-  # geometric distribution (no need for using "floor()" with exponential distribution, then)
+  # geometric distribution (no need for using "floor()" with exponential distribution)
   partners <- rgeom(n = n, prob = mean_partner_parameter) # per day
   
   # Try a discrete Pareto distribution?
@@ -40,7 +40,7 @@ assign_heterogeneous_rates <- function(n) {
   # Maybe we need a negative binomial? geometric is more overdispersed I think
   
   ##### NUMBER OF SEXUAL CONTACTS PER DAY
-  # set an exponential distribution on number of contacts per day
+  # set an exponential distribution on number of sexual contacts/acts/exposures per day
   acts_per_day <- rexp(n = n, rate = 1 / acts_per_day_parameter)
   # hist(acts_per_day, xlab = "contacts per day", main = "Number of contacts per day")
   # table(acts_per_day)
@@ -96,7 +96,7 @@ assign_changing_rates <- function(n) {
   lambda.low <- 0.333*rgamma(n = n, shape = shape_gamma, scale = scale)
 
   # Right now this changing lambda only affects new individuals, and the seed population
-  # keeps their lambda.high. I should change this, I think.
+  # keeps their lambda.high. Maybe I should change this.
   
   lambda <-   if (i <= 1*365) {
     lambda.high
