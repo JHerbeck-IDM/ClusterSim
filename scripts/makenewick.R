@@ -78,5 +78,5 @@ sampleLineList <- tribble(
     6,8,9,10)
 
 headnode <- sampleLineList$recipient[sampleLineList$source==0]
-print(paste0(makenewickstring(headnode, sampleLineList),";"))
-
+test <- print(paste0(makenewickstring(headnode, sampleLineList),";"))
+test <- "(1:1,((2:3,9:2):1,(((4:4,7:1):1,(6:0,8:1):2):2,(3:0,5:1):2):1):2):1;"

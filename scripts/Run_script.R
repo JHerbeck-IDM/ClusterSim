@@ -1,20 +1,20 @@
 ##### Libraries ####
 
-#library(dplyr)
-#library(ggplot2)
+require(dplyr)
 
 
 #### Initial parameters ####
 
-samplesize <- 100
+samplesize <- 10
 timestep <- 1    # timestep in days
-sim_time <- timestep*10*365
-set.seed(runif(1, min = 0, max = 100))
+sim_time <- timestep*2*365
+#set.seed(runif(1, min = 0, max = 100))
+set.seed(44)
 
 # Transmission rate parameters (these are initial parameters, if using the heterogeneous transmission option)
 mean_partner_parameter <- 0.5  # parameter for gamma distribution for mean (susceptible) partners per timestep
 acts_per_day_parameter <- 0.3   # acts per day per partner for exponential distribution (mean = 0.6)
-lambda_parameter <- 0.003    # mean risk of transmission given a sero-discordant contact (per-contact transmission prob.)
+lambda_parameter <- 0.005   # mean risk of transmission given a sero-discordant contact (per-contact transmission prob.)
 
 # Removal rate parameter
 removal_rate_parameter <- 0.005 # per day; expected length of time between infection and sampling?
@@ -122,9 +122,9 @@ for (i in seq_along(simulation_timesteps)) {
     
     transmission_record <- rbind(transmission_record, new_potential_sources)
       
-    # Then need to go back to line 89 (next step in loop through simulation_timesteps)
   }
-  
+  # Then need to go back to "for (i in seq_along(simulation_timesteps)) {" line
+  # (the next step in the loop through simulation_timesteps)
 }
 
 
@@ -136,11 +136,6 @@ str(population_summary)
 
 #population_summary$infection_source <- as.numeric(population_summary$infection_source)
 aaa <- aggregate(infection_source ~ infection_day, population_summary, length)
-plot(aaa$infection_day, aaa$infection_source,
-     xlab = "Time in days",
-     ylab = "Infections",
-     pch = 16,
-     col = 3)
 
 sum(aaa$infection_source)
 
