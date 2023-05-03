@@ -23,11 +23,12 @@ removal_rate_parameter <- 0.005 # per day; expected length of time between infec
 
 #### Scripts #### 
 
-# Functions needed to run the simulations
-source("scripts/assign_rates.R")   # where we designate the rates for each of the parameters above
-source("scripts/assess_removal.R")  # function to see if individuals are removed from the pop each timestep
-source("scripts/assess_transmission.R") # function to see if individuals transmit each timestep
-source("scripts/make_new_infecteds.R") # helper function needed to add new infected to "population_summary" df
+source("scripts/assign_rates.R")   
+# contains two functions to designate the rates for the parameters above
+source("scripts/assess_removal_and_transmission.R")  
+# contains two functions to see if individuals are removed from the pop each timestep
+source("scripts/make_new_infecteds.R") 
+# helper function needed to add new infecteds to "population_summary" dataframe
 
 
 #### Assign heterogeneous risk values ####
