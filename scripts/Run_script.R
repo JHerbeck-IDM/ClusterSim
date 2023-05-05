@@ -134,10 +134,9 @@ loop_timesteps  # QA to make sure my for() loop is working
 
 str(population_summary)
 
-#population_summary$infection_source <- as.numeric(population_summary$infection_source)
 aaa <- aggregate(infection_source ~ infection_day, population_summary, length)
 
-sum(aaa$infection_source)
+sum(aaa$infection_source) # Total number of infections in that simulation
 
 aaa$cumulative_infections <- cumsum(aaa$infection_source)
 plot(aaa$infection_day, aaa$cumulative_infections,
