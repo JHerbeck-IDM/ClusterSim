@@ -14,10 +14,10 @@ set.seed(45)
 # Transmission rate parameters (these are initial parameters, if using the heterogeneous transmission option)
 mean_partner_parameter <- 0.5  # parameter for gamma distribution for mean (susceptible) partners per timestep
 acts_per_day_parameter <- 0.3   # acts per day per partner for exponential distribution (mean)
-lambda_parameter <- 0.005   # mean risk of transmission given a sero-discordant contact (per-contact transmission prob.)
+lambda_parameter <- 0.004   # mean risk of transmission given a sero-discordant contact (per-contact transmission prob.)
 
 # Removal rate parameter
-removal_rate_parameter <- 0.003 # per day; expected length of time between infection and viral suppression?
+removal_rate_parameter <- 0.0001 # per day; expected length of time between infection and viral suppression?
                             # This needs to be 1) used, and 2) calibrated
 
 
@@ -57,8 +57,6 @@ population_summary <-
     
     "transmission_risk_per_day" = 1 - (1 - rates$lambda)^(rates$acts_per_day * rates$partners),
     # 1 - (1 - population_summary$transmission_risk_per_act)^(population_summary$acts_per_timestep)
-    
-    #"transmission_risk_per_day" = 0.5, # This was just a setting I used in QA/QC
     
     "infection_source" = NA,
     "infection_day" = NA,
@@ -125,7 +123,7 @@ for (i in seq_along(simulation_timesteps)) {
     transmission_record <- rbind(transmission_record, new_potential_sources)
       
   }
-  # Then need to go back to "for (i in seq_along(simulation_timesteps)) {" line
+  # Then it goes back to the "for (i in seq_along(simulation_timesteps)) {" line
   # (the next step in the loop through simulation_timesteps)
 }
 
