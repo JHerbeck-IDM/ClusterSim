@@ -5,11 +5,11 @@ require(dplyr)
 
 #### Initial parameters ####
 
-samplesize <- 50
+samplesize <- 10
 timestep <- 1    # timestep in days
 sim_time <- timestep*2*365
 #set.seed(runif(1, min = 0, max = 100))
-set.seed(45)
+set.seed(43)
 
 # Transmission rate parameters (these are initial parameters, if using the heterogeneous transmission option)
 mean_partner_parameter <- 0.5  # parameter for gamma distribution for mean (susceptible) partners per timestep
@@ -167,3 +167,23 @@ plot(aaa$infection_day, aaa$infection_source,
      pch = 16,
      col = 3)
 
+
+
+
+##### Make line list
+
+str(population_summary)
+
+# Add in sampling times
+population_summary$sampling_day <- population_summary$infection_day + 365
+
+# Make a Newick tree from each seed infection
+# "headnode" is the ID of a single seed infection
+
+#headnode <- sampleLineList$recipient[sampleLineList$source==0]
+headnode <- population_summary$ID[population_summary$infection_source == "NA"]
+
+Newick.tree <- print(paste0(makenewickstring(headnode, sampleLineList),";"))
+
+tree <- ape::read.tree(text = test)
+plot(tree)
