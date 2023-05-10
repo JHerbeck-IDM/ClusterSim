@@ -5,7 +5,7 @@ require(dplyr)
 
 #### Set initial parameters ####
 
-samplesize <- 10
+samplesize <- 100
 timestep <- 1    # timestep in days
 sim_time <- timestep*2*365
 #set.seed(runif(1, min = 0, max = 100))
@@ -14,7 +14,7 @@ set.seed(44)
 # Transmission rate parameters (these are initial parameters, if using the heterogeneous transmission option)
 mean_partner_parameter <- 0.5  # parameter for gamma distribution for mean (susceptible) partners per timestep
 acts_per_day_parameter <- 0.3   # acts per day per partner for exponential distribution (mean)
-lambda_parameter <- 0.03   # mean risk of transmission given a sero-discordant contact (per-contact transmission prob.)
+lambda_parameter <- 0.003   # mean risk of transmission given a sero-discordant contact (per-contact transmission prob.)
 
 # Removal rate and sampling time parameters
 removal_rate_parameter <- 0.0005 # per day; expected length of time between infection and viral suppression?
@@ -42,7 +42,6 @@ source("scripts/make_new_infecteds.R")
 # This specific call (with "samplesize" as input) is just for the initial population 
 # (the first time "population_summary" is made)
 
-#rates <- assign_heterogeneous_rates(samplesize)
 rates <- assign_heterogeneous_rates(samplesize)
 
 
@@ -89,7 +88,7 @@ loop_timesteps <- NULL # Just to make sure we were looping through all timesteps
 
 for (i in seq_along(simulation_timesteps)) {
   
-  loop_timesteps <- c(loop_timesteps, i)
+  loop_timesteps <- c(loop_timesteps, i) # make a vector of the timesteps for loop QA
   transmission_record$timestep <- i  # Update the timestep in the transmission record
   
   
@@ -112,9 +111,9 @@ for (i in seq_along(simulation_timesteps)) {
     # the lambda at a user-specified time, in order to get a stable epidemic
     
     transmitters <- transmission_record$recipient[transmission_record$transmission == 1]
-    removed <- transmission_record$recipient[transmission_record$removal == 1]
     infection_days <- transmission_record$timestep[transmission_record$transmission == 1]
-    
+    removed <- transmission_record$recipient[transmission_record$removal == 1]
+
     # the "rates", "transmitters", "removed", and "infection_days" vectors are used
     # in the "make_new_infected()" function to fill in variables
     

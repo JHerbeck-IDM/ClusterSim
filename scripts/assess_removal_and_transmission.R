@@ -20,7 +20,7 @@ assess_removal <- function(df1, df2){
         # Individuals who are already removed (i.e. if $removal == 1) are not evaluated again
         runif(1, min=0, max=1) < df1$removal_rate[i], 
       1, 
-      df2$removal[i])
+      df2$removal[i]) # makes sure to maintain removal==1 status for all previously removed individuals
   }
   return(df2)
 }

@@ -30,12 +30,10 @@ make_new_infecteds <- function(n, i){
     "transmission_risk_per_day" = 1 - (1 - rates$lambda)^(rates$acts_per_day * rates$partners),
     # 1 - (1 - population_summary$transmission_risk_per_act)^(population_summary$acts_per_timestep)
     
-    #"transmission_risk_per_day" = 0.5, # This was just a setting I used in QA/QC
-    
     "source" = transmitters,
     "infectionTime" = infection_days,
     
-    "sampleTime" = 0,
+    "sampleTime" = "test",
     "cumulative_partners" = 0,
     "cumulative_transmissions" = 0
   )
