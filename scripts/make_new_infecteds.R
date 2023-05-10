@@ -20,7 +20,7 @@
 make_new_infecteds <- function(n, i){
     
   df <- data.frame(
-    "ID" = seq( from = nrow(population_summary) + 1, to = nrow(population_summary) + n, by = 1),
+    "recipient" = seq( from = nrow(population_summary) + 1, to = nrow(population_summary) + n, by = 1),
     "removal_rate" = rates$removal_rate, # per day
     "partners" = rates$partners, # partners per day
     "acts_per_day" = rates$acts_per_day,
@@ -32,10 +32,10 @@ make_new_infecteds <- function(n, i){
     
     #"transmission_risk_per_day" = 0.5, # This was just a setting I used in QA/QC
     
-    "infection_source" = transmitters,
-    "infection_day" = infection_days,
+    "source" = transmitters,
+    "infectionTime" = infection_days,
     
-    "sampling_day" = 0,
+    "sampleTime" = 0,
     "cumulative_partners" = 0,
     "cumulative_transmissions" = 0
   )

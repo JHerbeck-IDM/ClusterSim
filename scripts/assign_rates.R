@@ -93,7 +93,7 @@ assign_changing_rates <- function(n) {
   scale <- lambda / shape_gamma  # scale parameter
   # These initial shape and scale give a gamma distribution that is pretty symmetrical, with min = 0.001, max = 0.003
   lambda.high <- 20*(rgamma(n = n, shape = shape_gamma, scale = scale))
-  lambda.low <- 0.2*rgamma(n = n, shape = shape_gamma, scale = scale)
+  lambda.low <- 0.5*rgamma(n = n, shape = shape_gamma, scale = scale)
 
   # Right now this changing lambda only affects new individuals, and the seed population
   # keeps their lambda.high. Maybe I should change this.
@@ -104,13 +104,6 @@ assign_changing_rates <- function(n) {
     lambda.low
   }
   
-  #lambda <- ifelse(i < 10*365, 
-  #                 5*rgamma(n = n, shape = shape_gamma, scale = scale),
-  #                 0*rgamma(n = n, shape = shape_gamma, scale = scale))
-  # hist(lambda, main = "Per-contact infection probability")
-  # mean(lambda)
-  
-  #lambda <- ifelse(i < 10*365, lambda <- 5*lambda, lambda <- 0*lambda)
   
   rates <- list(removal_rate = removal_rate, 
                 partners = partners, 

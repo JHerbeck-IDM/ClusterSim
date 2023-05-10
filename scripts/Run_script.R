@@ -3,25 +3,26 @@
 require(dplyr)
 
 
-#### Initial parameters ####
+#### Set initial parameters ####
 
 samplesize <- 10
 timestep <- 1    # timestep in days
 sim_time <- timestep*2*365
 #set.seed(runif(1, min = 0, max = 100))
-set.seed(43)
+set.seed(44)
 
 # Transmission rate parameters (these are initial parameters, if using the heterogeneous transmission option)
 mean_partner_parameter <- 0.5  # parameter for gamma distribution for mean (susceptible) partners per timestep
 acts_per_day_parameter <- 0.3   # acts per day per partner for exponential distribution (mean)
-lambda_parameter <- 0.004   # mean risk of transmission given a sero-discordant contact (per-contact transmission prob.)
+lambda_parameter <- 0.03   # mean risk of transmission given a sero-discordant contact (per-contact transmission prob.)
 
-# Removal rate parameter
-removal_rate_parameter <- 0.0001 # per day; expected length of time between infection and viral suppression?
-                            # This needs to be 1) used, and 2) calibrated
+# Removal rate and sampling time parameters
+removal_rate_parameter <- 0.0005 # per day; expected length of time between infection and viral suppression?
+sampling_time <- 365 # Can add in a distribution for this time
 
 
-#### Scripts #### 
+
+#### Load helper functions #### 
 
 source("scripts/assign_rates.R")   
 # contains two functions to designate the rates for the parameters above
@@ -31,25 +32,27 @@ source("scripts/make_new_infecteds.R")
 # helper function needed to add new infecteds to "population_summary" dataframe
 
 
-#### Assign heterogeneous risk values ####
 
-# Running the "assign__heterogeneous_rates" function will make vectors of the 4 rates (in a list output), 
-# as long as "samplesize"
-# These vectors are used to populate the rate variables in the "population_summary" df, below.
+#### Assign risk values ####
+
+# Running the "assign__heterogeneous_rates" function will make vectors (as long as "samplesize")
+# of the 4 rates (in a list output). These vectors are used to populate the rate 
+# variables in the "population_summary" data frame, below.
 
 # This specific call (with "samplesize" as input) is just for the initial population 
 # (the first time "population_summary" is made)
 
+#rates <- assign_heterogeneous_rates(samplesize)
 rates <- assign_heterogeneous_rates(samplesize)
-#rates <- assign_changing_rates(samplesize)
 
 
-#### Create the initial population ####
+
+#### Create population ####
 
 population_summary <-
   
   data.frame(
-    "ID" = seq(1, samplesize, by = 1), # samplesize is from above parameter inputs (total trial pop size)
+    "recipient" = seq(1, samplesize, by = 1), # samplesize is from above parameter inputs (total trial pop size)
     "removal_rate" = rates$removal_rate, # per day
     "partners" = rates$partners, # partners per day
     "acts_per_day" = rates$acts_per_day,
@@ -58,19 +61,23 @@ population_summary <-
     "transmission_risk_per_day" = 1 - (1 - rates$lambda)^(rates$acts_per_day * rates$partners),
     # 1 - (1 - population_summary$transmission_risk_per_act)^(population_summary$acts_per_timestep)
     
-    "infection_source" = NA,
-    "infection_day" = NA,
-    "sampling_day" = 0,
+    "source" = 0,
+    "infectionTime" = 0,
+    "sampleTime" = 0, 
     
     "cumulative_partners" = 0,      # To add
     "cumulative_transmissions" = 0   # To add
   )
 
+population_summary$sampleTime <- population_summary$infectionTime + sampling_time
+
+
+#### Create df to evaluate transmission and removal ####
 
 # Create shell for "transmission record," gives each individual ID their own set of timestep rows
 # This record is made anew each timestep (as opposed to the "population_summary," which is just appended each timestep)
 
-transmission_record <- data.frame(expand.grid("ID" = seq(1, samplesize, by = 1), "timestep" = timestep-1))
+transmission_record <- data.frame(expand.grid("recipient" = seq(1, samplesize, by = 1), "timestep" = timestep-1))
 transmission_record <- transmission_record %>% mutate(removal=0, transmission=0)
 
 
@@ -78,7 +85,6 @@ transmission_record <- transmission_record %>% mutate(removal=0, transmission=0)
 #### Simulation loops ####
 
 simulation_timesteps <- seq(timestep, sim_time, by=timestep)
-
 loop_timesteps <- NULL # Just to make sure we were looping through all timesteps
 
 for (i in seq_along(simulation_timesteps)) {
@@ -87,11 +93,11 @@ for (i in seq_along(simulation_timesteps)) {
   transmission_record$timestep <- i  # Update the timestep in the transmission record
   
   
-  ### Removal or transmission ###
+  ### Assess removal or transmission ###
   
   transmission_record <- assess_removal(population_summary, transmission_record)
   transmission_record <- assess_transmission(population_summary, transmission_record)
-  new_transmission_count <- sum(transmission_record$transmission)
+  new_transmission_count <- sum(transmission_record$transmission, na.rm = TRUE)
   
   
   ### Add newly infecteds ###
@@ -105,24 +111,25 @@ for (i in seq_along(simulation_timesteps)) {
     # This specific function (different from the initial "heterogeneous_rate" function above) changes 
     # the lambda at a user-specified time, in order to get a stable epidemic
     
-    transmitters <- transmission_record$ID[transmission_record$transmission == 1]
-    removed <- transmission_record$ID[transmission_record$removal == 1]
+    transmitters <- transmission_record$recipient[transmission_record$transmission == 1]
+    removed <- transmission_record$recipient[transmission_record$removal == 1]
     infection_days <- transmission_record$timestep[transmission_record$transmission == 1]
     
-    # the "rates", "transmitters", "removed", and "infection_times" vectors are used
+    # the "rates", "transmitters", "removed", and "infection_days" vectors are used
     # in the "make_new_infected()" function to fill in variables
     
     new_infecteds <- make_new_infecteds(new_transmission_count, i) # makes new df to add to population_summary
     population_summary <- rbind(population_summary, new_infecteds)
     
-    new_potential_sources <- data.frame("ID" = new_infecteds$ID, 
-                                        "timestep" = (new_infecteds$infection_day + timestep),
+    new_potential_sources <- data.frame("recipient" = new_infecteds$recipient, 
+                                        "timestep" = (new_infecteds$infectionTime + timestep),
                                         "removal" = 0, 
                                         "transmission" = 0)
     
     transmission_record <- rbind(transmission_record, new_potential_sources)
       
   }
+  
   # Then it goes back to the "for (i in seq_along(simulation_timesteps)) {" line
   # (the next step in the loop through simulation_timesteps)
 }
@@ -130,16 +137,15 @@ for (i in seq_along(simulation_timesteps)) {
 
 #### Post-processing ####
 
-loop_timesteps  # QA to make sure my for() loop is working
+loop_timesteps  # QA to make sure my "for(i in seq_along())" loop is working
 
-str(population_summary)
+#str(population_summary)
 
-aaa <- aggregate(infection_source ~ infection_day, population_summary, length)
+aaa <- aggregate(source ~ infectionTime, population_summary, length)
+sum(aaa$source) # Total number of infections in that simulation
 
-sum(aaa$infection_source) # Total number of infections in that simulation
-
-aaa$cumulative_infections <- cumsum(aaa$infection_source)
-plot(aaa$infection_day, aaa$cumulative_infections,
+aaa$cumulative_infections <- cumsum(aaa$source)
+plot(aaa$infectionTime, aaa$cumulative_infections,
      xlab = "Time in days",
      ylab = "Cumulative infections",
      pch = 16,
@@ -148,7 +154,7 @@ plot(aaa$infection_day, aaa$cumulative_infections,
 
 #### Offspring distribution
 
-bbb <- table(population_summary$infection_source)
+bbb <- table(population_summary$source)
 bbb <- as.data.frame(bbb)
 hist(bbb$Freq, breaks = max(bbb$Freq),
      xlim = c(0, max(bbb$Freq)),
@@ -160,8 +166,8 @@ summary(bbb$Freq)
 #### Incident infections
 
 #population_summary$infection_source <- as.numeric(population_summary$infection_source)
-aaa <- aggregate(infection_source ~ infection_day, population_summary, length)
-plot(aaa$infection_day, aaa$infection_source,
+aaa <- aggregate(source ~ infectionTime, population_summary, length)
+plot(aaa$infectionTime[aaa$infectionTime > 0], aaa$source[aaa$infectionTime > 0],
      xlab = "Time in days",
      ylab = "Infections",
      pch = 16,
@@ -170,20 +176,3 @@ plot(aaa$infection_day, aaa$infection_source,
 
 
 
-##### Make line list
-
-str(population_summary)
-
-# Add in sampling times
-population_summary$sampling_day <- population_summary$infection_day + 365
-
-# Make a Newick tree from each seed infection
-# "headnode" is the ID of a single seed infection
-
-#headnode <- sampleLineList$recipient[sampleLineList$source==0]
-headnode <- population_summary$ID[population_summary$infection_source == "NA"]
-
-Newick.tree <- print(paste0(makenewickstring(headnode, sampleLineList),";"))
-
-tree <- ape::read.tree(text = test)
-plot(tree)
