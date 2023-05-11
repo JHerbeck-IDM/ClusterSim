@@ -33,7 +33,7 @@ make_new_infecteds <- function(n, i){
     "source" = transmitters,
     "infectionTime" = infection_days,
     
-    "sampleTime" = "test",
+    "sampleTime" = 0,
     "cumulative_partners" = 0,
     "cumulative_transmissions" = 0
   )

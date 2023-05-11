@@ -5,16 +5,16 @@ require(dplyr)
 
 #### Set initial parameters ####
 
-samplesize <- 50
+samplesize <- 20
 timestep <- 1    # timestep in days
 sim_time <- timestep*2*365
 #set.seed(runif(1, min = 0, max = 100))
-set.seed(43)
+set.seed(42)
 
 # Transmission rate parameters (these are initial parameters, if using the heterogeneous transmission option)
 mean_partner_parameter <- 0.5  # parameter for gamma distribution for mean (susceptible) partners per timestep
 acts_per_day_parameter <- 0.3   # acts per day per partner for exponential distribution (mean)
-lambda_parameter <- 0.003   # mean risk of transmission given a sero-discordant contact (per-contact transmission prob.)
+lambda_parameter <- 0.002   # mean risk of transmission given a sero-discordant contact (per-contact transmission prob.)
 
 # Removal rate and sampling time parameters
 removal_rate_parameter <- 0.0005 # per day; expected length of time between infection and viral suppression?
@@ -133,15 +133,18 @@ for (i in seq_along(simulation_timesteps)) {
   # (the next step in the loop through simulation_timesteps)
 }
 
+# Add in the time of sampling after infection
+population_summary$sampleTime <- population_summary$infectionTime + sampling_time
+
+
+
 
 #### Post-processing ####
 
-loop_timesteps  # QA to make sure my "for(i in seq_along())" loop is working
-
-#str(population_summary)
+#loop_timesteps  # QA to make sure my "for(i in seq_along())" loop is working
 
 aaa <- aggregate(source ~ infectionTime, population_summary, length)
-sum(aaa$source) # Total number of infections in that simulation
+sum(aaa$source) # Total number of infections in the simulation
 
 aaa$cumulative_infections <- cumsum(aaa$source)
 plot(aaa$infectionTime, aaa$cumulative_infections,
@@ -153,7 +156,10 @@ plot(aaa$infectionTime, aaa$cumulative_infections,
 
 #### Offspring distribution
 
-bbb <- table(population_summary$source)
+popsum <- population_summary[population_summary$infectionTime > 365,]
+
+bbb <- table(popsum$source)
+#bbb <- table(population_summary$source)
 bbb <- as.data.frame(bbb)
 hist(bbb$Freq, breaks = max(bbb$Freq),
      xlim = c(0, max(bbb$Freq)),
