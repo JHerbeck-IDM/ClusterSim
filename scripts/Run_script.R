@@ -5,11 +5,11 @@ require(dplyr)
 
 #### Set initial parameters ####
 
-samplesize <- 100
+samplesize <- 50
 timestep <- 1    # timestep in days
 sim_time <- timestep*2*365
 #set.seed(runif(1, min = 0, max = 100))
-set.seed(44)
+set.seed(43)
 
 # Transmission rate parameters (these are initial parameters, if using the heterogeneous transmission option)
 mean_partner_parameter <- 0.5  # parameter for gamma distribution for mean (susceptible) partners per timestep

@@ -90,13 +90,13 @@ assign_changing_rates <- function(n) {
   shape_gamma <- 50   # shape parameter
   scale <- lambda / shape_gamma  # scale parameter
   # These initial shape and scale give a gamma distribution that is pretty symmetrical, with min = 0.001, max = 0.003
-  lambda.high <- 10*(rgamma(n = n, shape = shape_gamma, scale = scale))
+  lambda.high <- 20*(rgamma(n = n, shape = shape_gamma, scale = scale))
   lambda.low <- 0.5*rgamma(n = n, shape = shape_gamma, scale = scale)
 
   # Right now this changing lambda only affects new individuals, and the seed population
   # keeps their lambda.high. Maybe I should change this.
   
-  lambda <-   if (i <= 1*365) {
+  lambda <-   if (i < 1*365) {
     lambda.high
   } else {
     lambda.low
