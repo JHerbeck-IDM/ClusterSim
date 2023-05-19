@@ -5,7 +5,7 @@ require(dplyr)
 
 #### Set initial parameters ####
 
-samplesize <- 20
+samplesize <- 50
 timestep <- 1    # timestep in days
 sim_time <- timestep*2*365
 #set.seed(runif(1, min = 0, max = 100))
@@ -18,7 +18,7 @@ lambda_parameter <- 0.002   # mean risk of transmission given a sero-discordant 
 
 # Removal rate and sampling time parameters
 removal_rate_parameter <- 0.0005 # per day; expected length of time between infection and viral suppression?
-sampling_time <- 365 # Can add in a distribution for this time
+sampling_delay <- 365 # Can add in a distribution for this time
 
 
 
@@ -65,11 +65,15 @@ population_summary <-
     "sampleTime" = 0, 
     
     "cumulative_partners" = 0,      # To add
-    "cumulative_transmissions" = 0   # To add
+    "cumulative_transmissions" = 0    # To add
   )
 
-population_summary$sampleTime <- population_summary$infectionTime + sampling_time
+#population_summary$sampleTime <- population_summary$infectionTime + sampling_time
 
+# We have to change this:  SampleTime of each recipient should be after each recipient's 
+# last transmission time to make the newick script work right now.
+# Need to use the infectionTime of the source column with the
+# same recipient ID.
 
 #### Create df to evaluate transmission and removal ####
 
@@ -119,9 +123,20 @@ for (i in seq_along(simulation_timesteps)) {
     
     new_infecteds <- make_new_infecteds(new_transmission_count, i) # makes new df to add to population_summary
     population_summary <- rbind(population_summary, new_infecteds)
+    # population_summary now includes old IDs ($recipient) and new IDs
     
+    # Update $cumulative_infections variable for all cases where $recipient is included
+    # in the "transmitters" vector
+    population_summary$cumulative_transmissions[population_summary$recipient %in% transmitters] <- 
+      population_summary$cumulative_transmissions[population_summary$recipient %in% transmitters] + 1    
+    
+    
+    
+    
+    
+    # Below is to add the new infected individuals to the "transmission_record"
     new_potential_sources <- data.frame("recipient" = new_infecteds$recipient, 
-                                        "timestep" = (new_infecteds$infectionTime + timestep),
+                                        "timestep" = (new_infecteds$infectionTime),
                                         "removal" = 0, 
                                         "transmission" = 0)
     
@@ -134,8 +149,41 @@ for (i in seq_along(simulation_timesteps)) {
 }
 
 # Add in the time of sampling after infection
-population_summary$sampleTime <- population_summary$infectionTime + sampling_time
+# Needs to be after the last transmission of each recipient
+attach(population_summary)
+population_summary$sampleTime <-
+  ifelse(
+    recipient %in% source == FALSE,
+    #if the recipient is not a source
+    infectionTime + sampling_delay,
+    # sample time is just after the infection time,
+    # otherwise, if the recipient is a source, the sample time
+    # is after the last transmission
+    max(population_summary$infectionTime[which(population_summary$source == population_summary$recipient)]) + sampling_delay)
 
+
+df <- population_summary[48:60,]
+
+for(i in 1:nrow(df)) {
+  df$sampleTime[i] <-
+    if (!(df$recipient[i] %in% df$source)) {
+      #if the recipient is not a source, then
+      
+      df$infectionTime[i] + sampling_delay
+    } else{
+      # sampleTime is "sampling_delay" days after the infectionTime,
+      
+      max(df$infectionTime[df$source == df$recipient[i]]) + sampling_delay
+      # otherwise, if the recipient is a source, the sample time is after the last transmission
+      
+    }
+}
+
+a <- df |>
+  group_by(source) |>
+  mutate(max_infectionTime = max(infectionTime)) |>
+  ungroup() |>
+  mutate(new_sampleTime = max_infectionTime + sampling_delay)
 
 
 
@@ -154,18 +202,16 @@ plot(aaa$infectionTime, aaa$cumulative_infections,
      col = 3)
 
 
-#### Offspring distribution
+#### Distribution of transmissions/infected individuals
 
-popsum <- population_summary[population_summary$infectionTime > 365,]
+summary(population_summary$cumulative_transmissions)
+# Mean is the R0
 
-bbb <- table(popsum$source)
-#bbb <- table(population_summary$source)
-bbb <- as.data.frame(bbb)
-hist(bbb$Freq, breaks = max(bbb$Freq),
-     xlim = c(0, max(bbb$Freq)),
-     xlab = "Transmissions per person",
-     ylab = "Count")
-summary(bbb$Freq)
+hist(population_summary$cumulative_transmissions,
+     breaks = max(summary(population_summary$cumulative_transmissions)),
+     xlab = "cumulative transmissions per person",
+     ylab = "frequency")
+
 
 
 #### Incident infections
