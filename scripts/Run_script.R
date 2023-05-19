@@ -166,7 +166,12 @@ for (i in 1:nrow(population_summary)) {
     }
 }
 
+#df <- population_summary
 
+#df$sampleTime = with(df,
+#                     tapply(rep(infectionTime, 2), c(recipient, source), max)[
+#                       as.character(recipient)
+#                     ] + sampling_delay)
 
 
 #a <- df |>
