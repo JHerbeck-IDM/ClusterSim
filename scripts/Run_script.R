@@ -7,7 +7,7 @@ require(dplyr)
 
 samplesize <- 50
 timestep <- 1    # timestep in days
-sim_time <- timestep*2*365
+sim_time <- timestep*3*365
 #set.seed(runif(1, min = 0, max = 100))
 set.seed(42)
 
@@ -148,42 +148,32 @@ for (i in seq_along(simulation_timesteps)) {
   # (the next step in the loop through simulation_timesteps)
 }
 
+
 # Add in the time of sampling after infection
-# Needs to be after the last transmission of each recipient
-attach(population_summary)
-population_summary$sampleTime <-
-  ifelse(
-    recipient %in% source == FALSE,
-    #if the recipient is not a source
-    infectionTime + sampling_delay,
-    # sample time is just after the infection time,
-    # otherwise, if the recipient is a source, the sample time
-    # is after the last transmission
-    max(population_summary$infectionTime[which(population_summary$source == population_summary$recipient)]) + sampling_delay)
-
-
-df <- population_summary[48:60,]
-
-for(i in 1:nrow(df)) {
-  df$sampleTime[i] <-
-    if (!(df$recipient[i] %in% df$source)) {
+# Needs to be after the last transmission of each recipient (right now, in order for "makenewick.R" to work)
+for (i in 1:nrow(population_summary)) {
+  population_summary$sampleTime[i] <-
+    if (!(population_summary$recipient[i] %in% population_summary$source)) {
       #if the recipient is not a source, then
       
-      df$infectionTime[i] + sampling_delay
+      population_summary$infectionTime[i] + sampling_delay
     } else{
       # sampleTime is "sampling_delay" days after the infectionTime,
       
-      max(df$infectionTime[df$source == df$recipient[i]]) + sampling_delay
+      max(population_summary$infectionTime[population_summary$source == population_summary$recipient[i]]) + sampling_delay
       # otherwise, if the recipient is a source, the sample time is after the last transmission
       
     }
 }
 
-a <- df |>
-  group_by(source) |>
-  mutate(max_infectionTime = max(infectionTime)) |>
-  ungroup() |>
-  mutate(new_sampleTime = max_infectionTime + sampling_delay)
+
+
+
+#a <- df |>
+#  group_by(source) |>
+#  mutate(max_infectionTime = max(infectionTime)) |>
+#  ungroup() |>
+#  mutate(new_sampleTime = max_infectionTime + sampling_delay)
 
 
 
