@@ -18,7 +18,7 @@ lambda_parameter <- 0.002   # mean risk of transmission given a sero-discordant 
 
 # Removal rate and sampling time parameters
 removal_rate_parameter <- 0.0005 # per day; expected length of time between infection and viral suppression?
-sampling_delay <- 365 # Can add in a distribution for this time
+sampling_delay <- 365 # Can add in a distribution for this time length
 
 
 
