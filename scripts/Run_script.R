@@ -1,16 +1,11 @@
 # What biological or technical process affect cluster size distributions?
 
 
-##### Libraries ####
-
-require(dplyr)
-
-
 #### Set initial parameters ####
 
 samplesize <- 50
 timestep <- 1    # timestep in days
-sim_time <- timestep*3*365
+sim_time <- timestep*5*365
 #set.seed(runif(1, min = 0, max = 100))
 set.seed(42)
 
