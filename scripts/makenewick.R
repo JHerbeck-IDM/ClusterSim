@@ -1,6 +1,6 @@
 # makenewick.R
 # outputs a Newick representation of a tree based on a line list
-# for Josh Herbeck
+# Dennis Chao, for Josh Herbeck
 # May 2023
 
 makenewickstring <- function(source, lineList) {
