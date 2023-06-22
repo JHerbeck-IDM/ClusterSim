@@ -97,3 +97,5 @@ individual to the population at a certain rate.
 all partners; it doesn't allow an individual to transmit multiple times in the 
 same timestep. Might need to fix that if and only if we use timesteps greater 
 than 1 day.
+
+6. Adapt my vaccine efficacy ABC (calibration) code for this model
