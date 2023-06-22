@@ -73,7 +73,9 @@ The model includes some core functions:
 ## How to run the model
 
 Basically you just need to open up *Run_script.R*, modify the parameters
-listed below as you see fit, and source the Run script.
+listed below as you see fit, and source the Run script. The output will be the 
+"population_summary" file. From this file you can extract the epidemic trajectory
+and summary statistics like transmissions per individual and generation time.
 
 Initial input parameters:
 
@@ -87,21 +89,44 @@ removal_rate_parameter
 
 ## Things still to implement:
 
-1. allow for biased sampling (preferential sampling of individuals
+1. Allow for biased sampling (preferential sampling of individuals
 based on their individual characteristics, which would be their risk 
-parameterization).
+parameterization).  
 
-2. allow for changes to individuals' risk parameterization over the course
-of a simulation (e.g. high to low partner number; high to low per-act risk)
+2. Allow for changes to individuals' risk parameterization over the course
+of a simulation (e.g. high to low partner number; high to low per-act risk).  
 
-3. allow for per-act transmission rate to change based on time since infection?
+3. Allow for per-act transmission rate to change based on time since infection?  
 
-4. allow for importation of HIV, e.g. add infected individuals with no named source
-individual to the population at a certain rate.
+4. Allow for importation of HIV, e.g. add infected individuals with no named source
+individual to the population at a certain rate. How to add those to the Newick files,
+though? Not sure.  
 
 5. Currently the transmission_risk_per_day parameter combines the risk across 
 all partners; it doesn't allow an individual to transmit multiple times in the 
 same timestep. Might need to fix that if and only if we use timesteps greater 
-than 1 day.
+than 1 day.  
 
-6. Adapt my vaccine efficacy ABC (calibration) code for this model
+6. Adapt my vaccine efficacy ABC (calibration) code for this model. 
+
+7. Write a wrapper function that calls the Run_script N times, with a new seed 
+each time, and aggregates the results into a single data frame. (Right now the 
+epidemic appears to be highly affected by the seed and the initial sample size, 
+which is not unexpected given HIV transmission probabilities.). 
+
+## Example run:
+
+This is the parameterization of one example simulation. The output epidemic
+trajectory is the "ClusterSim.infections.example.jpeg"
+
+samplesize <- 100 
+timestep <- 1  
+sim_time <- timestep*5*365 
+mean_partner_parameter <- 0.5  
+acts_per_day_parameter <- 0.3   
+lambda_parameter <- 0.002  
+removal_rate_parameter <- 0.001 
+sampling_delay <- 365 
+set.seed(40)
+
+
