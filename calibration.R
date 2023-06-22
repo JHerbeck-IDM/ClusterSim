@@ -1,16 +1,18 @@
 ### Model calibration with ABC
 
-Now we start to calibrate with approximate Bayesian computation. Our goal is to calibrate roughly to an R effective of ~ 1.0 to start.
 
-What parameter should I calibrate?
+#### This is not done
 
-The endpoint of all this modeling is to vary biological and technical processes across
-several different simulations, all of which have similar average epidemic patterns, i.e.
-all simulations have Reff of ~1, or mean viral generation times of X, and see if 
-phylogenetic clustering patterns can vary accordingly.
 
-We have to set target stats for the calibration, and we need to choose a parameter, or
-parameters, to vary. 
+
+# The goals of this modeling experiment require us to vary biological and technical 
+# processes across several different simulations, all of which have similar average 
+# epidemic patterns, i.e. all simulations have R-eff of ~1, or mean viral generation 
+# times of X years, etc., and to evaluate if phylogenetic clustering patterns are
+# affected by different processes.
+
+# So we have to set target stats for the calibration, and we need to choose a parameter, or
+# parameters, to vary. 
 
 ### Target stat
 
@@ -25,12 +27,12 @@ target.stats <- data.frame(time, placebo.incidence, VE.target)
 
 ### Function to get output target stat for each simulation replicate
 
-```{r function for target stat}
+```{r function.for.target.stat}
 
-VE.from.sim <- function(ClusterSim.output){
+target.stat.from.sim <- function(ClusterSim.output){
 
-pull in the output from each simulation (population_summary file?)
-estimate the target stat
+# pull in the output from each simulation (from the population_summary file)
+# estimate the target stat
 
 return(output df)
 

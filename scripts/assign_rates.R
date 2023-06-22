@@ -69,11 +69,9 @@ assign_heterogeneous_rates <- function(n) {
 assign_changing_rates <- function(n) {
   
   ##### EXTINCTION RATE
-  # This is lineage extinction, removal, or sampling and going on ART
+  # This is lineage extinction, removal, sampling, or going on ART
   removal_rate <- c(rep(removal_rate_parameter, n)) # per day
-  # "mean_partners" is from the "initial_parameters.R" script
-  # wait time is 1 year until sampling
-  
+   
   ##### NUMBER OF PARTNERS
   # geometric distribution (no need for using "floor()" with exponential distribution, then)
   partners <- rgeom(n = n, prob = mean_partner_parameter) # per day
@@ -112,3 +110,55 @@ assign_changing_rates <- function(n) {
   return(rates)
   
 }
+
+
+
+# Function to assign variables to to new infections
+
+# For each new infection, assign a unique ID and then fill in variables 
+
+# Removal/sampling risk
+# 1. removal rate 
+
+# Transmission risk:
+# For each input row (unique ID), sample from distributions to generate:
+# 1. number of partners per timestep (this is a way to get at concurrency rates 
+# or to identify a high risk core group) 
+# 2. number of susceptible partners (this is a way to get at prevalence, but probably not critical), 
+# 3. number of sexual contacts/day
+# 4. per-contact transmission rate
+
+
+assign_homogeneous_rates <- function(n) {
+  
+  ##### EXTINCTION RATE
+  removal_rate <- rep(removal_rate_parameter, n) #per day
+  
+  ##### NUMBER OF PARTNERS
+  partners <- rep(mean_partner_parameter, n) # per timestep
+  
+  ##### NUMBER OF SEXUAL CONTACTS PER DAY
+  acts_per_day <- rep(acts_per_day_parameter, n)
+   
+  ##### PER-CONTACT (per-act) TRANSMISSION RATE
+  lambda.high <- 20*rep(lambda_parameter, n) # mean risk of infection given exposure (per-act infection prob.)
+  lambda.low <- 0.5*rep(lambda_parameter, n)
+  
+  lambda <-   if (i < 1*365) {
+    lambda.high
+  } else {
+    lambda.low
+  }
+  
+  lambda <- replace(lambda, lambda >= 1, 0.99)  # lambda can't be >= 1 
+  
+  rates <- list(removal_rate = removal_rate, 
+                partners = partners, 
+                acts_per_day = acts_per_day, 
+                lambda = lambda)
+  
+  return(rates)
+  
+}
+
+

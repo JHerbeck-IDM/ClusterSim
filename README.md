@@ -88,12 +88,12 @@ parameterization).
 2. allow for changes to individuals' risk parameterization over the course
 of a simulation (e.g. high to low partner number; high to low per-act risk)
 
-2.a. allow for per-act transmission rate to change based on time since infection?
+3. allow for per-act transmission rate to change based on time since infection?
 
-3. allow for importation of HIV, e.g. add infected individuals with no named source
+4. allow for importation of HIV, e.g. add infected individuals with no named source
 individual to the population at a certain rate.
 
-4. Currently the transmission_risk_per_day parameter combines the risk across 
+5. Currently the transmission_risk_per_day parameter combines the risk across 
 all partners; it doesn't allow an individual to transmit multiple times in the 
 same timestep. Might need to fix that if and only if we use timesteps greater 
 than 1 day.
