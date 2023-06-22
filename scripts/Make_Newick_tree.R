@@ -10,7 +10,7 @@ str(population_summary)
 
 #headnode <- sampleLineList$recipient[sampleLineList$source==0]
 headnode <- population_summary$recipient[population_summary$source == 0]
-#headnode <- population_summary$recipient[20]   # test
+headnode <- population_summary$recipient[20]   # test
 
 test <- print(paste0(makenewickstring(headnode, population_summary),";"))
 
