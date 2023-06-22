@@ -65,6 +65,7 @@ The model includes some core functions:
 
 -   *assign_heterogeneous_rates*
 -   *assign_homogeneous_rates*
+-   *assign_changing_rates*
 -   *assess_removal*
 -   *assess_transmission*
 -   *make_new_infections*
