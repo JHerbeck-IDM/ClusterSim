@@ -76,8 +76,13 @@ listed below as you see fit, and source the Run script.
 
 Initial input parameters:
 
-samplesize timestep sim_time mean_partner_parameter
-acts_per_day_parameter lambda_parameter removal_rate_parameter
+samplesize 
+timestep 
+sim_time 
+mean_partner_parameter
+acts_per_day_parameter 
+lambda_parameter 
+removal_rate_parameter
 
 ## Things still to implement:
 
