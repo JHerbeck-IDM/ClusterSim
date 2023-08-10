@@ -1,6 +1,6 @@
 # Branching process model of HIV transmission
 
-require(dplyr)
+suppressMessages( require(dplyr) )
 
 #### Set initial parameters ####
 ## (RN) These parameters are configured by the calling function in hiv_branching_process.R.
@@ -105,9 +105,15 @@ transmission_record <- transmission_record %>% mutate(removal=0, transmission=0)
 
 
 #### Simulation loops ####
-
 simulation_timesteps <- seq(timestep, sim_time, by=timestep)
 loop_timesteps <- NULL # Just to make sure we were looping through all timesteps
+
+progress_bar <- txtProgressBar( min   = 1, 
+                                max   = simulation_timesteps[length(simulation_timesteps)], 
+                                style = 3,
+								width = 50,
+								char  = "="
+							   )
 
 for (i in seq_along(simulation_timesteps)) {
   
@@ -118,11 +124,8 @@ for (i in seq_along(simulation_timesteps)) {
       cat( "\n" )
     }
   }
-  
-  #if (i>=20){
-  #  break
-  #}
-  
+  setTxtProgressBar( progress_bar, i )
+    
   loop_timesteps <- c(loop_timesteps, i) # make a vector of the timesteps for loop QA
   transmission_record$timestep <- i  # Update the timestep in the transmission record
   
@@ -178,6 +181,7 @@ for (i in seq_along(simulation_timesteps)) {
   # Then it goes back to the "for (i in seq_along(simulation_timesteps)) {" line
   # (the next step in the loop through simulation_timesteps)
 }
+close(progress_bar)
 
 
 # Add in the time of sampling after infection

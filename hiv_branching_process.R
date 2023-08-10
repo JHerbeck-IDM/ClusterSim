@@ -6,9 +6,9 @@
 
 
 # Constants/config
-DEBUG     <- TRUE
-RUN_TESTS <- TRUE
-SEED      <- 0
+DEBUG    <- FALSE
+RUN_TEST <- FALSE
+SEED     <- 0
 
 
 
@@ -172,5 +172,6 @@ run_test <-function(){
 }
 
 
-
-run_test()
+if (RUN_TEST){
+    run_test()
+}
