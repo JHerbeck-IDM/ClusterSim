@@ -21,6 +21,8 @@ from rpy2.robjects.conversion import localconverter
 
 # IDM packages
 from phylomodels.trees import generate_treeFromFile
+from phylomodels.trees.transform_transToPhyloTree import transform_transToPhyloTree
+from phylomodels.trees.transform_joinTrees import transform_joinTrees
 
 # Configuration parameters -----------------------------------------------------
 LABEL          = "test01"
@@ -34,22 +36,12 @@ RESULTS_PATH   = os.path.abspath( '../results' )
 
 
 
-
 def main():
 
     # Set parameters
-    params = { 'sim_time' : 3650 }
-    
-    
-    # Initialize output dataframe
-    cluster_data = pd.DataFrame( columns=[ 'sampling_rate', 
-                                           'cutoff',
-                                           'n_clusters',
-                                           'avg_cluster_size'
-                                          ]
-                                 )
-    
-    
+    params = { 'sim_time':3650, 'seed':0 }
+
+
     # Create output directory and file name prefix
     results_dir = os.path.join( RESULTS_PATH, LABEL )
     if os.path.exists( results_dir ):
@@ -62,10 +54,37 @@ def main():
         os.makedirs( results_dir )
 
     output_prefix = results_dir + '/' + LABEL
-    
-    
+
+
+    # Run simulations
+    cluster_data = run_analysis( SAMPLING_RATES, CUTOFFS, params, output_prefix)
+    print( cluster_data )
+
+    return
+
+
+
+
+def run_analysis( sampling_rates, cutoffs, params={}, output_prefix='' ):
+
+    # Initialize Python's random number generator
+    if 'seed' in params:
+        rand_seed = params['seed']
+        np.random.seed( rand_seed )
+    else:
+        rand_seed = np.nan
+
+
+    # Initialize output dataframe
+    cluster_data = pd.DataFrame( columns=[ 'sampling_rate', 
+                                           'cutoff',
+                                           'n_clusters',
+                                           'avg_cluster_size',
+                                           'rand_seed'
+                                          ]
+                                 )
+ 
     # Run simulation
-    print( '... running simulation with parameters: ', params )
     for key, value in params.items():
         output_prefix += '--'
         output_prefix += key.replace(' ','')
@@ -74,34 +93,40 @@ def main():
     population_summary = run_simulation( params )
     population_summary.to_csv( output_prefix + '--population_summary.csv' )
     
-    tree = build_tree( population_summary )
-    tree.write( format=1, outfile=output_prefix + '--full_tree.nwk' )
+    
+    # Build full phylo-like tree
+    full_tree = build_tree( population_summary )
+    full_tree.write( format=1, outfile=output_prefix + '--full_tree.nwk' )
     
     
     # Post-simulation parameter sweeps
-    for sampling_rate in SAMPLING_RATES:
-    
-        # Tree sampling
+    for sampling_rate in sampling_rates:
+
         output_prefix_sr = output_prefix +  '--sampling_rate_' \
                                          + str(sampling_rate).replace('.', '_')
+    
+        # Tree sampling
         sampled_individuals = sample_population( population_summary, 
                                                  sampling_rate 
                                                 )
-        sampled_tree = tree.copy( 'deepcopy' )
+        sampled_tree = full_tree.copy( 'deepcopy' )
         sampled_tree.prune( sampled_individuals.tolist(), 
                             preserve_branch_length = True 
                            )
-        sampled_tree.write( format=1, outfile=output_prefix_sr + '--sampled_tree.nwk' )
+        sampled_tree.write( format  = 1, 
+                            outfile = output_prefix_sr + '--sampled_tree.nwk' 
+                           )
         sampled_tree.render( output_prefix_sr + '--sampled_tree.png' )
 
         # Clustering analysis
-        for cutoff in CUTOFFS:
+        for cutoff in cutoffs:
             n_clusters, \
                 avg_cluster_size, \
                 cluster_size_distribution, \
                 cluster_labels = get_cluster_stats( sampled_tree, cutoff )
 
-            cluster_info = pd.DataFrame( { 'sampling_rate'    : [sampling_rate],
+            cluster_info = pd.DataFrame( { 'rand_seed'        : [rand_seed],
+                                           'sampling_rate'    : [sampling_rate],
                                            'cutoff'           : [cutoff],
                                            'n_clusters'       : [n_clusters],
                                            'avg_cluster_size' : [avg_cluster_size]
@@ -118,10 +143,10 @@ def main():
     # Save results and return
     cluster_data = cluster_data.reset_index()
     cluster_data.to_csv( output_prefix + '--cluster_info.csv' )
-    return
+    return cluster_data
 
 
-    
+
 
 def run_simulation( params={} ):
     
@@ -153,10 +178,11 @@ def run_simulation( params={} ):
                                          .astype(str)
                                          
     # And let's also remove seed infections that didn't generate new infections
-    seed_infections = population_summary[ (population_summary['source'] == '0') ]['recipient']
-    seed_infections_with_children    = seed_infections[  seed_infections.isin( population_summary['source'] ) ]
-    seed_infections_with_no_children = seed_infections[ ~seed_infections.isin( population_summary['source'] ) ]
-    population_summary_lean = population_summary[ ~population_summary['recipient'].isin(seed_infections_with_no_children) ]                                         
+    all_seeds = population_summary[ population_summary['source']=='0' ].index
+    all_infected_by_seed = population_summary[ population_summary['source'].isin( all_seeds ) ]
+    all_successful_seeds = all_infected_by_seed['source'].unique()
+    all_unsuccessful_seeds = list( set(all_seeds) - set(all_successful_seeds) )
+    population_summary_lean = population_summary.drop( index=all_unsuccessful_seeds )
     
     # Return to working directory
     os.chdir( cwd )
@@ -183,12 +209,15 @@ def build_tree( population_summary ):
                                                 ]
                                  )
 
-    # Join subtrees to a root if needed, so that we generate a single tree
-    if len(trees) != 1:
-        print('joining multiple subtrees has not been implemented yet')
-    else:
-        tree = trees[0]
-        
+    # Make it phylo-like
+    raw_tree = trees[0]
+    seed_infections = raw_tree.get_children()
+    seeds_phylo = []
+    for this_seed in seed_infections:
+        subtree = transform_transToPhyloTree( this_seed )
+        seeds_phylo.append( subtree )
+    tree = transform_joinTrees( seeds_phylo )
+
     return tree
 
 
