@@ -80,7 +80,9 @@ def run_analysis( sampling_rates, cutoffs, params={}, output_prefix='' ):
                                            'cutoff',
                                            'n_clusters',
                                            'avg_cluster_size',
-                                           'rand_seed'
+                                           'rand_seed',
+                                           'sampled_individuals',
+                                           'cluster_labels'
                                           ]
                                  )
  
@@ -124,13 +126,16 @@ def run_analysis( sampling_rates, cutoffs, params={}, output_prefix='' ):
                 avg_cluster_size, \
                 cluster_size_distribution, \
                 cluster_labels = get_cluster_stats( sampled_tree, cutoff )
-
-            cluster_info = pd.DataFrame( { 'rand_seed'        : [rand_seed],
-                                           'sampling_rate'    : [sampling_rate],
-                                           'cutoff'           : [cutoff],
-                                           'n_clusters'       : [n_clusters],
-                                           'avg_cluster_size' : [avg_cluster_size]
-                                          }
+            
+            cluster_info \
+                = pd.DataFrame( { 'rand_seed'           : [rand_seed],
+                                  'sampling_rate'       : [sampling_rate],
+                                  'cutoff'              : [cutoff],
+                                  'n_clusters'          : [n_clusters],
+                                  'avg_cluster_size'    : [avg_cluster_size],
+                                  'sampled_individuals' : [sampled_individuals.tolist()],
+                                  'cluster_labels'      : [cluster_labels]
+                                 }
                                         )
             cluster_size_distribution_df \
                 = pd.DataFrame( {key:[value] for key, value in cluster_size_distribution.items() } )
