@@ -1,21 +1,22 @@
-# What biological or technical process affect cluster size distributions?
+# Branching process model of HIV transmission
 
+require(dplyr)
 
 #### Set initial parameters ####
 
-samplesize <- 50
+samplesize <- 100
 timestep <- 1    # timestep in days
 sim_time <- timestep*5*365
 #set.seed(runif(1, min = 0, max = 100))
-set.seed(42)
+set.seed(40)
 
-# Transmission rate parameters (these are initial parameters, if using the heterogeneous transmission option)
 mean_partner_parameter <- 0.5  # parameter for gamma distribution for mean (susceptible) partners per timestep
 acts_per_day_parameter <- 0.3   # acts per day per partner for exponential distribution (mean)
-lambda_parameter <- 0.002   # mean risk of transmission given a sero-discordant contact (per-contact transmission prob.)
+lambda_parameter <- 0.002   # mean risk of transmission given a sero-discordant contact (per-act transmission prob.)
+# this lambda parameter is higher in the first year and lower after that)
 
 # Removal rate and sampling time parameters
-removal_rate_parameter <- 0.0005 # per day; expected length of time between infection and viral suppression?
+removal_rate_parameter <- 0.001 # per day; expected length of time between infection and viral suppression
 sampling_delay <- 365 # Can add in a distribution for this time length
 
 
@@ -38,7 +39,10 @@ source("scripts/make_new_infecteds.R")
 # variables in the "population_summary" data frame, below.
 
 # This specific call (with "samplesize" as input) is just for the initial population 
-# (the first time "population_summary" is made)
+# (the first time "population_summary" is made). After this, we use "assign_changing_rates", 
+# which has a very high per-act rate (lambda) for the first year (user can change this time),
+# followed by a much lower per-act rate. This is needed to get the epidemic to take off,
+# and then to make the epidemic look normal (slowly decreasing).
 
 rates <- assign_heterogeneous_rates(samplesize)
 
@@ -164,21 +168,6 @@ for (i in 1:nrow(population_summary)) {
     }
 }
 
-#df <- population_summary
-
-#df$sampleTime = with(df,
-#                     tapply(rep(infectionTime, 2), c(recipient, source), max)[
-#                       as.character(recipient)
-#                     ] + sampling_delay)
-
-
-#a <- df |>
-#  group_by(source) |>
-#  mutate(max_infectionTime = max(infectionTime)) |>
-#  ungroup() |>
-#  mutate(new_sampleTime = max_infectionTime + sampling_delay)
-
-
 
 #### Post-processing ####
 
@@ -198,12 +187,15 @@ plot(aaa$infectionTime, aaa$cumulative_infections,
 #### Distribution of transmissions/infected individuals
 
 summary(population_summary$cumulative_transmissions)
-# Mean is the R0
+# Mean of the total number of transmissions per person
 
-hist(population_summary$cumulative_transmissions,
-     breaks = max(summary(population_summary$cumulative_transmissions)),
-     xlab = "cumulative transmissions per person",
-     ylab = "frequency")
+summary(population_summary$cumulative_transmissions[population_summary$infectionTime > 365])
+# Same, but removing the first year, which has very high lambda (on purpose)
+
+#hist(population_summary$cumulative_transmissions[population_summary$infectionTime > 365],
+#     breaks = max(summary(population_summary$cumulative_transmissions)),
+#     xlab = "cumulative transmissions per person",
+#     ylab = "frequency")
 
 
 

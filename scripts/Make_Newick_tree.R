@@ -9,8 +9,8 @@ str(population_summary)
 # "headnode" is the ID of a single seed infection
 
 #headnode <- sampleLineList$recipient[sampleLineList$source==0]
-headnode <- population_summary$recipient[population_summary$source == 0]
-headnode <- population_summary$recipient[20]
+#headnode <- population_summary$recipient[population_summary$source == 0]
+headnode <- population_summary$recipient[20]   # test
 
 test <- print(paste0(makenewickstring(headnode, population_summary),";"))
 

@@ -36,3 +36,44 @@ makenewickstring <- function(source, lineList) {
     }
 }
 
+# working example
+library(tidyr) # this is needed just to make the sample data
+sampleLineList <- tribble(
+    ~source, ~recipient, ~infectionTime, ~sampleTime, 
+    0,1,1,3,
+    1,2,2,5,
+    2,3,4,6,
+    2,10,4,12,
+    2,4,5,9,
+    3,5,6,7,
+    4,6,7,9,
+    4,7,8,9,
+    6,8,9,10)
+
+headnode <- sampleLineList$recipient[sampleLineList$source==0]
+print(paste0(makenewickstring(headnode, sampleLineList),";"))
+
+# second example with three-way branch
+sampleLineList <- tribble(
+    ~source, ~recipient, ~infectionTime, ~sampleTime, 
+    0,1,1,3,
+    1,2,2,5,
+    2,3,4,6,
+    2,4,5,9,
+    2,9,9,11,
+    3,5,6,7,
+    4,6,7,9,
+    4,7,8,9,
+    6,8,9,10)
+
+headnode <- sampleLineList$recipient[sampleLineList$source==0]
+print(paste0(makenewickstring(headnode, sampleLineList),";"))
+
+# large example
+# ulimit -s 16384 # enlarge stack limit to 16 megs
+# options(expressions=10000)
+bigdat <- read.csv("population_summary.csv")
+for (headnode in bigdat$X[bigdat$source==0]) {
+    print(paste("source",headnode))
+    print(paste0(makenewickstring(headnode, bigdat),";"))
+}
