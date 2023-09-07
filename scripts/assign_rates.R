@@ -3,7 +3,7 @@
 # For each new infection, assign a unique ID and then fill in variables 
 
 # Removal/sampling risk
-  # 1. removal rate (This is essentially takes away the ability for individuals
+  # 1. removal rate (This essentially takes away the ability for individuals
   # to transmit, AND gives us a time at which to "sample" their lineages when
   # we transform the line list into a phylogeny)
 
@@ -25,7 +25,7 @@ assign_heterogeneous_rates <- function(n) {
   # "mean_partners" is from the "initial_parameters.R" script
   # wait time is 1 year until sampling
   
-  ##### NUMBER OF PARTNERS
+  ##### NUMBER OF (SUSCEPTIBLE) PARTNERS
   # geometric distribution (no need for using "floor()" with exponential distribution)
   partners <- rgeom(n = n, prob = mean_partner_parameter) # per day
   

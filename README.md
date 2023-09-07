@@ -84,7 +84,7 @@ timestep
 sim_time  
 mean_partner_parameter  
 acts_per_day_parameter   
-lambda_parameter  
+lambda_parameter (base infectivity; base per-act transmission rate)
 removal_rate_parameter   
 
 ## Things still to implement:
@@ -107,12 +107,6 @@ all partners; it doesn't allow an individual to transmit multiple times in the
 same timestep. Might need to fix that if and only if we use timesteps greater 
 than 1 day.  
 
-6. Adapt my vaccine efficacy ABC (calibration) code for this model. 
-
-7. Write a wrapper function that calls the Run_script N times, with a new seed 
-each time, and aggregates the results into a single data frame. (Right now the 
-epidemic appears to be highly affected by the seed and the initial sample size, 
-which is not unexpected given HIV transmission probabilities.). 
 
 ## Example run:
 

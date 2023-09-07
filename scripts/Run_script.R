@@ -4,9 +4,9 @@ require(dplyr)
 
 #### Set initial parameters ####
 
-samplesize <- 100
+samplesize <- 1000
 timestep <- 1    # timestep in days
-sim_time <- timestep*5*365
+sim_time <- timestep*10*365
 #set.seed(runif(1, min = 0, max = 100))
 set.seed(40)
 
@@ -28,7 +28,7 @@ source("scripts/assign_rates.R")
 source("scripts/assess_removal_and_transmission.R")  
 # contains two functions to see if individuals are removed from the pop each timestep
 source("scripts/make_new_infecteds.R") 
-# helper function needed to add new infecteds to "population_summary" dataframe
+# helper function needed to add new infected individuals to "population_summary" dataframe
 
 
 
