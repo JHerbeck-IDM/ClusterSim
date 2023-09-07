@@ -23,7 +23,7 @@ per timestep), the number of sex acts per day (per partner), and
 the per-act probability of transmission. Post-simulation there is an 
 individual probability of sampling. (There is also an individual probability of 
 removal/extinction from the population during a simulation. This could be akin
-to death or viral suppression or our migration.)
+to death or viral suppression or migration.)
 
 First order goal:  understand if high mean degree ("super-spreading",
 or the existence of a high risk core group/key population) results in
