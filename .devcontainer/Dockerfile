@@ -28,3 +28,8 @@ RUN install2.r --error --skipinstalled -n -1 \
 # Install Python packages
 COPY requirements.txt /tmp/pip-tmp/
 RUN python3 -m pip --disable-pip-version-check --no-cache-dir install -r /tmp/pip-tmp/requirements.txt
+
+COPY rpy2-RELEASE_3_5_13.tar.gz /tmp/rpy2/
+RUN pushd /tmp/rpy2 ; tar -xzf rpy2-RELEASE_3_5_13.tar.gz ; cd rpy2-RELEASE_3_5_13 ; python3 setup.py build install ; popd
+COPY phyloModels-master.zip /tmp/phyloModels
+RUN pushd /tmp/phyloModels ; unzip phyloModels-master.zip ; cd phyloModels-master ; python3 -m pip install . ; popd
