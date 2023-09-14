@@ -16,5 +16,6 @@ scikit-learn
 seaborn
 epyestim
 ete3
+tzlocal
 # rpy2
 # phyloModels

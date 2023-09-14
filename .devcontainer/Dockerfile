@@ -29,13 +29,14 @@ RUN install2.r --error --skipinstalled -n -1 \
 COPY requirements.txt /tmp/pip-tmp/
 RUN python3 -m pip --disable-pip-version-check --no-cache-dir install -r /tmp/pip-tmp/requirements.txt
 
-COPY rpy2-RELEASE_3_5_13.tar.gz /tmp/rpy2/
-WORKDIR "/tmp/rpy2"
-RUN tar -xzf rpy2-RELEASE_3_5_13.tar.gz
-WORKDIR "/tmp/rpy2/rpy2-RELEASE_3_5_13"
-RUN python3 setup.py build install
-COPY phyloModels-master.zip /tmp/phyloModels
-WORKDIR "/tmp/phyloModels"
-RUN unzip phyloModels-master.zip
-WORKDIR "/tmp/phyloModels/phyloModels-master"
-RUN python3 -m pip install .
+RUN apt-get update
+RUN apt-get install bzip2 libbz2-dev
+RUN python3 -m pip install --upgrade pip setuptools wheel
+RUN python3 -m pip install rpy2
+
+# COPY phyloModels-clorton-relax-qt5-version.zip /tmp/phyloModels-clorton-relax-qt5-version.zip
+# WORKDIR "/tmp"
+# RUN unzip phyloModels-clorton-relax-qt5-version.zip
+# WORKDIR "/tmp/phyloModels-clorton-relax-qt5-version"
+# RUN python3 -m pip install pyqt5
+# RUN python3 -m pip install .
