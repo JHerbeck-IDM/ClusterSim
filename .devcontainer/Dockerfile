@@ -30,6 +30,12 @@ COPY requirements.txt /tmp/pip-tmp/
 RUN python3 -m pip --disable-pip-version-check --no-cache-dir install -r /tmp/pip-tmp/requirements.txt
 
 COPY rpy2-RELEASE_3_5_13.tar.gz /tmp/rpy2/
-RUN pushd /tmp/rpy2 ; tar -xzf rpy2-RELEASE_3_5_13.tar.gz ; cd rpy2-RELEASE_3_5_13 ; python3 setup.py build install ; popd
+WORKDIR "/tmp/rpy2"
+RUN tar -xzf rpy2-RELEASE_3_5_13.tar.gz
+WORKDIR "/tmp/rpy2/rpy2-RELEASE_3_5_13"
+RUN python3 setup.py build install
 COPY phyloModels-master.zip /tmp/phyloModels
-RUN pushd /tmp/phyloModels ; unzip phyloModels-master.zip ; cd phyloModels-master ; python3 -m pip install . ; popd
+WORKDIR "/tmp/phyloModels"
+RUN unzip phyloModels-master.zip
+WORKDIR "/tmp/phyloModels/phyloModels-master"
+RUN python3 -m pip install .
