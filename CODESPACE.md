@@ -1,4 +1,4 @@
-# Working with this Code in a GitHub Codespace
+# Working with this code in a GitHub Codespace
 
 **_Even if you don't need any of this information about getting started with GitHub Codespaces, please read the [note at the bottom](./CODESPACE.md#phylomodels-python-package) about installing the Phylomodels Python package in the codespace._**
 
