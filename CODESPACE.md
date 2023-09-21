@@ -61,11 +61,10 @@ Unlike Jupyter notebooks which are hosted in the Codespace VS Code instance, acc
 
 1. Select the small "radio tower" icon in the bottom status bar.
 
-<img src="media/radio-tower.png"  style="margin: 15px 0; box-shadow: 0 10px 16px 0 rgba(0,0,0,0.2),0 6px 20px 0 rgba(0,0,0,0.19) !important; display: block; margin-left: auto; margin-right: auto;">
-
+![Radio Tower](media/radio-tower.png)
 
 2. Hover over the line with "Rstudio" in the "Port" column to reveal and select the globe icon in the "Forwarded Address" column. This will open a new browser tab connected to the RStudio server running in the codespace. Changes made and saved in this interface are persisted in the codespace. I.e., you can see and commit changes made in the RStudio server tab in the source code pane of the VS Code tab.
 
-<img src="media/globe-icon.png"  style="margin: 15px 0; box-shadow: 0 10px 16px 0 rgba(0,0,0,0.2),0 6px 20px 0 rgba(0,0,0,0.19) !important; display: block; margin-left: auto; margin-right: auto;">
+![globe icon](media/globe-icon.png)
 
-<img src="media/source-control-pane.png" style="margin: 15px 0; box-shadow: 0 10px 16px 0 rgba(0,0,0,0.2),0 6px 20px 0 rgba(0,0,0,0.19) !important; display: block; margin-left: auto; margin-right: auto;">
+![source control pane](media/source-control-pane.png)
