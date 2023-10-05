@@ -24,6 +24,10 @@ from phylomodels.trees import generate_treeFromFile
 from phylomodels.trees.transform_transToPhyloTree import transform_transToPhyloTree
 from phylomodels.trees.transform_joinTrees import transform_joinTrees
 
+# Make sure that ETE3 renders trees
+os.environ['QT_QPA_PLATFORM']='offscreen'
+
+
 # Configuration parameters -----------------------------------------------------
 LABEL          = "test01"
 SAMPLING_RATES = [ 0.01, 0.05 ]
@@ -79,7 +83,10 @@ def run_analysis( sampling_rates, cutoffs, params={}, output_prefix='' ):
     cluster_data = pd.DataFrame( columns=[ 'sampling_rate', 
                                            'cutoff',
                                            'n_clusters',
-                                           'avg_cluster_size',
+                                           'cluster_size_mean',
+                                           'cluster_size_cov',
+                                           'weighted_cluster_size_mean',
+                                           'weighted_cluster_size_cov',
                                            'rand_seed',
                                            'sampled_individuals',
                                            'cluster_labels'
@@ -123,7 +130,10 @@ def run_analysis( sampling_rates, cutoffs, params={}, output_prefix='' ):
         # Clustering analysis
         for cutoff in cutoffs:
             n_clusters, \
-                avg_cluster_size, \
+                cluster_size_mean, \
+                cluster_size_cov,  \
+                weighted_cluster_size_mean, \
+                weighted_cluster_size_cov,  \
                 cluster_size_distribution, \
                 cluster_labels = get_cluster_stats( sampled_tree, cutoff )
             
@@ -132,18 +142,24 @@ def run_analysis( sampling_rates, cutoffs, params={}, output_prefix='' ):
                                   'sampling_rate'       : [sampling_rate],
                                   'cutoff'              : [cutoff],
                                   'n_clusters'          : [n_clusters],
-                                  'avg_cluster_size'    : [avg_cluster_size],
+                                  'cluster_size_mean'   : [cluster_size_mean],
+                                  'cluster_size_cov'    : [cluster_size_cov],
+                                  'weighted_cluster_size_mean' : [weighted_cluster_size_mean],
+                                  'weighted_cluster_size_cov'  : [weighted_cluster_size_cov],
                                   'sampled_individuals' : [sampled_individuals.tolist()],
                                   'cluster_labels'      : [cluster_labels]
                                  }
                                         )
+            
             cluster_size_distribution_df \
-                = pd.DataFrame( {key:[value] for key, value in cluster_size_distribution.items() } )
+                    = pd.DataFrame( {key:[value] for key, value in cluster_size_distribution.items() } )
             cluster_size_distribution_df \
-                = cluster_size_distribution_df.add_prefix( 'n_clusters_size_' )
+                    = cluster_size_distribution_df.add_prefix( 'n_clusters_size_' )
             cluster_update = cluster_info.join( cluster_size_distribution_df )
-            cluster_data = pd.concat( [cluster_data, cluster_update] )
-    
+            
+            if len(cluster_update) > 0:
+                cluster_data = pd.concat( [cluster_data, cluster_update.dropna(axis=1)] )
+                
     
     # Save results and return
     cluster_data = cluster_data.reset_index()
@@ -269,15 +285,14 @@ def get_cluster_stats( tree, cutoff ):
     np.fill_diagonal( distance, float('inf') )
     names = names[idx]
     
-    
+
     # Identify clusters
     num_clusters, cluster_labels = connected_components( distance < cutoff )
     cluster_labels = cluster_labels.tolist()
     
 
-    # Compute cluster statistics
+    # Compute cluster size statistics
     cluster_sizes = { str(i): cluster_labels.count(i) for i in cluster_labels }
-    
     cluster_size_distribution = {}
     singletons = []
     for cluster_id, size in cluster_sizes.items():
@@ -286,27 +301,52 @@ def get_cluster_stats( tree, cutoff ):
         else:
             singletons.append( int(cluster_id) )
     
-    n_clusters = 0
-    if len(cluster_size_distribution) != 0:
-        cluster_size_sum = 0
-        for key, value in cluster_size_distribution.items():
-            n_clusters += value
-            cluster_size_sum += int(key)*value
-        avg_cluster_size = ( cluster_size_sum/n_clusters )
+    cluster_size_all = np.empty( shape=(0,0) )
+    for key, value in cluster_size_distribution.items():
+        cluster_size_all = np.append( cluster_size_all, 
+                                      np.repeat( int(key), value ) 
+                                     )
+
+
+    n_clusters = len( cluster_size_all )
+    if n_clusters > 0:
+        cluster_size_mean = np.mean( cluster_size_all )
+        cluster_size_std  = np.std ( cluster_size_all )
+        cluster_size_cov  = (cluster_size_std / cluster_size_mean) 
     else:
-        avg_cluster_size = 0
-    
+        cluster_size_mean = 0
+        cluster_size_cov  = 0
+
+
+    # Weighted cluster size statistics
+    n_samples = len(cluster_labels)
+    weighted_cluster_size_mean = 0
+    weighted_cluster_size_var  = 0
+    for key, value in cluster_size_distribution.items():
+        weighted_cluster_size_mean += int(key)*value/n_samples * int(key)
+        weighted_cluster_size_var  += int(key)*value/n_samples * (int(key) - cluster_size_mean)**2
+    weighted_cluster_size_std = weighted_cluster_size_var**0.5
+    weighted_cluster_size_cov = (weighted_cluster_size_std / weighted_cluster_size_mean) if weighted_cluster_size_mean !=0 else np.nan
+
+
+    # Clean cluster labels from singletons
     for i in range( len(cluster_labels) ):
         if cluster_labels[i] in singletons:
             cluster_labels[i] = np.nan
         
+
+    # Finalize and return
+    return n_clusters,         \
+           cluster_size_mean,  \
+           cluster_size_cov,   \
+           weighted_cluster_size_mean, \
+           weighted_cluster_size_cov,  \
+           cluster_size_distribution,  \
+           cluster_labels
     
-    return n_clusters, avg_cluster_size, cluster_size_distribution, cluster_labels
+    
     
 
-    
-    
-    
 #-------------------------------------------------------------------------------
 # Clustering utilities
 
