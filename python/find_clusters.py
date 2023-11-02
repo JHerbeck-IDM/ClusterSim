@@ -12,6 +12,10 @@ import matplotlib
 from scipy.sparse.csgraph import connected_components
 from matplotlib import pyplot as plt
 
+# Additional Python packages for computing the effective reproductive number
+import epyestim
+from scipy.stats import gamma
+
 # R-related packages
 import rpy2
 import rpy2.robjects as robjects
@@ -80,7 +84,8 @@ def run_analysis( sampling_rates, cutoffs, params={}, output_prefix='' ):
 
 
     # Initialize output dataframe
-    cluster_data = pd.DataFrame( columns=[ 'sampling_rate', 
+    cluster_data = pd.DataFrame( columns=[ 'reff',
+                                           'sampling_rate', 
                                            'cutoff',
                                            'n_clusters',
                                            'cluster_size_mean',
@@ -101,7 +106,7 @@ def run_analysis( sampling_rates, cutoffs, params={}, output_prefix='' ):
         output_prefix += str(value).replace('.', '_')
     population_summary = run_simulation( params )
     population_summary.to_csv( output_prefix + '--population_summary.csv' )
-    
+    reff = get_reff( population_summary )
     
     # Build full phylo-like tree
     full_tree = build_tree( population_summary )
@@ -139,6 +144,7 @@ def run_analysis( sampling_rates, cutoffs, params={}, output_prefix='' ):
             
             cluster_info \
                 = pd.DataFrame( { 'rand_seed'           : [rand_seed],
+                                  'reff'                : [reff],
                                   'sampling_rate'       : [sampling_rate],
                                   'cutoff'              : [cutoff],
                                   'n_clusters'          : [n_clusters],
@@ -167,6 +173,54 @@ def run_analysis( sampling_rates, cutoffs, params={}, output_prefix='' ):
     return cluster_data
 
 
+
+def get_reff( population_summary ):
+
+    # Compute serial intervals
+    infection_times = population_summary.loc[:, ['recipient', 'infectionTime'] ]
+    for index, row in population_summary.iterrows():
+        #recipient     = row['recipient']
+        source        = row['source'   ]
+        infectionTime = row['infectionTime']
+        if source != '0':
+            infectionTime_source = infection_times[ infection_times['recipient']==source ]['infectionTime'].item()
+            serial_interval = infectionTime - infectionTime_source
+        else:
+            serial_interval = np.nan
+        population_summary.loc[index, 'serial_interval'] = serial_interval
+    
+    # Fit a Gamma distribution that models the serial intervals
+    a, loc, scale  = gamma.fit(population_summary['serial_interval'].dropna().values)
+    si_distribution = epyestim.distributions.discretise_gamma( a, scale, loc )
+ 
+    # Estimate the effective reproductive number (we need a timeseries so we are using an arbitrary start date)
+    infection_count = pd.DataFrame()
+    infection_count['number_of_infections' ] = population_summary.groupby('infectionTime').count().iloc[:,0]
+    infection_count['cumulative_infections'] = infection_count['number_of_infections'].cumsum()    
+    cases = pd.Series( data = infection_count['number_of_infections'].values, 
+                       index=pd.date_range('1/1/1980', periods=len(infection_count)) )
+    r_eff = epyestim.bagging_r( cases,
+                                si_distribution,
+                                np.array([1]),
+                                a_prior = 3,
+                                b_prior = 1,
+                                r_window_size = 7,
+                                smoothing_window = 7,
+                                auto_cutoff = False
+                               )
+    #print('+++ si_distribution = ', si_distribution)
+    #print('... end of si_distribution')
+    #print('infection_count = ', infection_count)
+    #print('... end of infection count' )
+    #print('cases = ', cases)
+    #print(' ... end of cases')
+    #print('r_eff = ', r_eff)
+    #print('r_eff_mean all = ', r_eff['R_mean'].mean() ) 
+    #print('r_eff_mean 1/2 = ', r_eff['R_mean'][int(len(r_eff)/2):].mean() ) 
+    #print('r_eff_mean 1/4 = ', r_eff['R_mean'][int(len(r_eff)/4):].mean() )
+    reff = r_eff['R_mean'][int(len(r_eff)/4):].mean()
+    
+    return reff
 
 
 def run_simulation( params={} ):
@@ -307,7 +361,6 @@ def get_cluster_stats( tree, cutoff ):
                                       np.repeat( int(key), value ) 
                                      )
 
-
     n_clusters = len( cluster_size_all )
     if n_clusters > 0:
         cluster_size_mean = np.mean( cluster_size_all )
@@ -319,12 +372,28 @@ def get_cluster_stats( tree, cutoff ):
 
 
     # Weighted cluster size statistics
-    n_samples = len(cluster_labels)
+    cluster_size_frequencies = {}
+    cluster_individual = {}
+    cluster_individual_dist = {}
+    frequency_count = 0
+    individual_dist_count = 0
+    for key, value in cluster_size_distribution.items():
+        frequency_count += value
+    for key, value in cluster_size_distribution.items():
+        cluster_size_frequencies[key] = value / frequency_count
+        cluster_individual[key] = int(key)*cluster_size_frequencies[key]
+        individual_dist_count += cluster_individual[key]
+    for key, value in cluster_individual.items():
+        cluster_individual_dist[key] = cluster_individual[key] / individual_dist_count
+
     weighted_cluster_size_mean = 0
     weighted_cluster_size_var  = 0
-    for key, value in cluster_size_distribution.items():
-        weighted_cluster_size_mean += int(key)*value/n_samples * int(key)
-        weighted_cluster_size_var  += int(key)*value/n_samples * (int(key) - cluster_size_mean)**2
+    for key, value in cluster_individual_dist.items():
+        weighted_cluster_size_mean += cluster_individual_dist[key] * int(key)
+    for key, value in cluster_individual_dist.items():
+        weighted_cluster_size_var += ( cluster_individual_dist[key] * int(key)  \
+                                       - weighted_cluster_size_mean )**2
+    weighted_cluster_size_var = weighted_cluster_size_var / len(cluster_individual_dist) if len(cluster_individual_dist) !=0 else np.nan
     weighted_cluster_size_std = weighted_cluster_size_var**0.5
     weighted_cluster_size_cov = (weighted_cluster_size_std / weighted_cluster_size_mean) if weighted_cluster_size_mean !=0 else np.nan
 
