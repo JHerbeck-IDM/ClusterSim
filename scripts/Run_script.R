@@ -1,12 +1,13 @@
 # Branching process model of HIV transmission
 
-require(dplyr)
+install.packages("tidyverse")
+library(tidyverse)
 
 #### Set initial parameters ####
 
 samplesize <- 100
 timestep <- 1    # timestep in days
-sim_time <- timestep*5*365
+sim_time <- timestep*2*365
 #set.seed(runif(1, min = 0, max = 100))
 set.seed(40)
 
@@ -132,7 +133,13 @@ for (i in seq_along(simulation_timesteps)) {
     population_summary$cumulative_transmissions[population_summary$recipient %in% transmitters] <- 
       population_summary$cumulative_transmissions[population_summary$recipient %in% transmitters] + 1    
     
-    
+    # Update population_summary$transmission_risk_per_act based on disease stage
+    # If an individual is in "primary infection", i.e. <3 months after infection, then their
+    # $transmission_risk_per_act is X10, otherwise as is.
+    acute_infection_time <- 30
+    population_summary$transmission_risk_per_act <- ifelse((i - population_summary$infectionTime > acute_infection_time),
+                                                           population_summary$transmission_risk_per_act * 10,
+                                                           population_summary$transmission_risk_per_act)
     
     
     
@@ -146,7 +153,7 @@ for (i in seq_along(simulation_timesteps)) {
       
   }
   
-  # Then it goes back to the "for (i in seq_along(simulation_timesteps)) {" line
+  # Then it loops back to the "for (i in seq_along(simulation_timesteps)) {" line
   # (the next step in the loop through simulation_timesteps)
 }
 
