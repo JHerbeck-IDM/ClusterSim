@@ -165,7 +165,13 @@ for (i in seq_along(simulation_timesteps)) {
       population_summary$cumulative_transmissions[population_summary$recipient %in% transmitters] + 1    
     
     
-    
+    # Update population_summary$transmission_risk_per_act based on disease stage
+    # If an individual is in "primary infection", i.e. <3 months after infection, then their
+    # $transmission_risk_per_act is X10, otherwise as is.
+    acute_infection_time <- 30
+    population_summary$transmission_risk_per_act <- ifelse((i - population_summary$infectionTime > acute_infection_time),
+                                                           population_summary$transmission_risk_per_act * 10,
+                                                           population_summary$transmission_risk_per_act)
     
     
     # Below is to add the new infected individuals to the "transmission_record"
