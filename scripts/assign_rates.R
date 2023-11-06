@@ -53,7 +53,7 @@ assign_heterogeneous_rates <- function(n) {
   # These initial shape and scale give a gamma distribution that is pretty symmetrical, with min = 0.001, max = 0.003
   lambda <- rgamma(n = n, shape = shape_gamma, scale = scale)
   
-  lambda <- replace(lambda, lambda >= 1, 0.99) # lambda can't be >= 1
+  lambda <- replace(lambda, lambda >= 1, 0.95) # lambda can't be >= 1
 
   rates <- list(removal_rate = removal_rate, 
                      partners = partners, 
@@ -100,7 +100,7 @@ assign_changing_rates <- function(n) {
     lambda.low
   }
   
-  lambda <- replace(lambda, lambda >= 1, 0.99)  # lambda can't be >= 1 
+  lambda <- replace(lambda, lambda >= 1, 0.95)  # lambda can't be >= 1 
   
   rates <- list(removal_rate = removal_rate, 
                 partners = partners, 

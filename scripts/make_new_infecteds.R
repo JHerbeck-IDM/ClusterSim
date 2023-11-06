@@ -10,14 +10,11 @@
 # (n) is the number of individuals that need to be added to population_summary
 # This number will be the "new_transmission_count"
 
-
-
 # Add a time variable to the function call e.g. (function(n, timestep))
 # and then a rate parameter call conditional on the timestep
 
 
-
-make_new_infecteds <- function(n, i){
+make_new_infecteds <- function(n){
     
   df <- data.frame(
     "recipient" = seq( from = nrow(population_summary) + 1, to = nrow(population_summary) + n, by = 1),

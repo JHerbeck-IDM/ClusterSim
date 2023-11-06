@@ -1,7 +1,7 @@
 # Branching process model of HIV transmission
 
-install.packages("tidyverse")
-library(tidyverse)
+#install.packages("tidyverse")
+require(tidyverse)
 
 #### Set initial parameters ####
 
@@ -124,7 +124,7 @@ for (i in seq_along(simulation_timesteps)) {
     # the "rates", "transmitters", "removed", and "infection_days" vectors are used
     # in the "make_new_infected()" function to fill in variables
     
-    new_infecteds <- make_new_infecteds(new_transmission_count, i) # makes new df to add to population_summary
+    new_infecteds <- make_new_infecteds(new_transmission_count) # makes new df to add to population_summary
     population_summary <- rbind(population_summary, new_infecteds)
     # population_summary now includes old IDs ($recipient) and new IDs
     
@@ -136,12 +136,14 @@ for (i in seq_along(simulation_timesteps)) {
     # Update population_summary$transmission_risk_per_act based on disease stage
     # If an individual is in "primary infection", i.e. <3 months after infection, then their
     # $transmission_risk_per_act is X10, otherwise as is.
-    acute_infection_time <- 30
-    population_summary$transmission_risk_per_act <- ifelse((i - population_summary$infectionTime > acute_infection_time),
-                                                           population_summary$transmission_risk_per_act * 10,
+    acute_infection_time <- 30  # days
+    population_summary$transmission_risk_per_act <- ifelse((i - population_summary$infectionTime <= acute_infection_time),
+                                                           population_summary$transmission_risk_per_act * 5,
                                                            population_summary$transmission_risk_per_act)
     
-    
+    population_summary$transmission_risk_per_act <- replace(population_summary$transmission_risk_per_act, 
+                                                            population_summary$transmission_risk_per_act >= 1, 0.95)  
+    # transmission_risk_per_act can't be >= 1
     
     # Below is to add the new infected individuals to the "transmission_record"
     new_potential_sources <- data.frame("recipient" = new_infecteds$recipient, 
@@ -160,16 +162,16 @@ for (i in seq_along(simulation_timesteps)) {
 
 # Add in the time of sampling after infection
 # Needs to be after the last transmission of each recipient (right now, in order for "makenewick.R" to work)
-for (i in 1:nrow(population_summary)) {
-  population_summary$sampleTime[i] <-
-    if (!(population_summary$recipient[i] %in% population_summary$source)) {
+for (ii in 1:nrow(population_summary)) {
+  population_summary$sampleTime[ii] <-
+    if (!(population_summary$recipient[ii] %in% population_summary$source)) {
       #if the recipient is not a source, then
       
-      population_summary$infectionTime[i] + sampling_delay
+      population_summary$infectionTime[ii] + sampling_delay
     } else{
       # sampleTime is "sampling_delay" days after the infectionTime,
       
-      max(population_summary$infectionTime[population_summary$source == population_summary$recipient[i]]) + sampling_delay
+      max(population_summary$infectionTime[population_summary$source == population_summary$recipient[ii]]) + sampling_delay
       # otherwise, if the recipient is a source, the sample time is after the last transmission
       
     }
