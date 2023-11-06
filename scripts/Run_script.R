@@ -112,6 +112,7 @@ for (i in seq_along(simulation_timesteps)) {
     
     # Append newly infected individuals to the "population_summary" data frame
     rates <- assign_changing_rates(new_transmission_count)
+    
     # Use "assign_changing_rates" to make new heterogeneous rate vectors of 
     # new_transmission_count length
     # This specific function (different from the initial "heterogeneous_rate" function above) changes 
@@ -132,19 +133,7 @@ for (i in seq_along(simulation_timesteps)) {
     # in the "transmitters" vector
     population_summary$cumulative_transmissions[population_summary$recipient %in% transmitters] <- 
       population_summary$cumulative_transmissions[population_summary$recipient %in% transmitters] + 1    
-    
-    # Update population_summary$transmission_risk_per_act based on disease stage
-    # If an individual is in "primary infection", i.e. <3 months after infection, then their
-    # $transmission_risk_per_act is X10, otherwise as is.
-    acute_infection_time <- 30  # days
-    population_summary$transmission_risk_per_act <- ifelse((i - population_summary$infectionTime <= acute_infection_time),
-                                                           population_summary$transmission_risk_per_act * 5,
-                                                           population_summary$transmission_risk_per_act)
-    
-    population_summary$transmission_risk_per_act <- replace(population_summary$transmission_risk_per_act, 
-                                                            population_summary$transmission_risk_per_act >= 1, 0.95)  
-    # transmission_risk_per_act can't be >= 1
-    
+
     # Below is to add the new infected individuals to the "transmission_record"
     new_potential_sources <- data.frame("recipient" = new_infecteds$recipient, 
                                         "timestep" = (new_infecteds$infectionTime),
@@ -152,8 +141,25 @@ for (i in seq_along(simulation_timesteps)) {
                                         "transmission" = 0)
     
     transmission_record <- rbind(transmission_record, new_potential_sources)
-      
   }
+  
+  
+  # Update population_summary$transmission_risk_per_act based on disease stage
+  # If an individual is in "primary infection", i.e. <3 months after infection, then their
+  # $transmission_risk_per_act is X10, otherwise as is.
+  acute_infection_time <- 30  # days
+  population_summary$transmission_risk_per_act <- ifelse( ((i - population_summary$infectionTime )== 0),
+                                                          population_summary$transmission_risk_per_act * 5,
+                                                          population_summary$transmission_risk_per_act)
+  population_summary$transmission_risk_per_act <- ifelse( ((i - population_summary$infectionTime )== acute_infection_time),
+                                                          population_summary$transmission_risk_per_act / 5,
+                                                          population_summary$transmission_risk_per_act)
+
+  population_summary$transmission_risk_per_act <- replace(population_summary$transmission_risk_per_act, 
+                                                          population_summary$transmission_risk_per_act >= 1, 0.95)  
+  # transmission_risk_per_act can't be >= 1
+  
+    
   
   # Then it loops back to the "for (i in seq_along(simulation_timesteps)) {" line
   # (the next step in the loop through simulation_timesteps)
