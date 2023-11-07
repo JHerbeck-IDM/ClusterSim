@@ -7,13 +7,13 @@ require(tidyverse)
 
 samplesize <- 500
 timestep <- 1    # timestep in days
-sim_time <- timestep*5*365
+sim_time <- timestep*3*365
 #set.seed(runif(1, min = 0, max = 100))
 set.seed(40)
 
 mean_partner_parameter <- 0.5  # parameter for gamma distribution for mean (susceptible) partners per timestep
 acts_per_day_parameter <- 0.3   # acts per day per partner for exponential distribution (mean)
-lambda_parameter <- 0.002   # mean risk of transmission given a sero-discordant contact (per-act transmission prob.)
+lambda_parameter <- 0.0025   # mean risk of transmission given a sero-discordant contact (per-act transmission prob.)
 # this lambda parameter is higher in the first year and lower after that)
 
 # Removal rate and sampling time parameters
@@ -98,13 +98,11 @@ for (i in seq_along(simulation_timesteps)) {
   loop_timesteps <- c(loop_timesteps, i) # make a vector of the timesteps for loop QA
   transmission_record$timestep <- i  # Update the timestep in the transmission record
   
-  
   ### Assess removal or transmission ###
   
   transmission_record <- assess_removal(population_summary, transmission_record)
   transmission_record <- assess_transmission(population_summary, transmission_record)
   new_transmission_count <- sum(transmission_record$transmission, na.rm = TRUE)
-  
   
   ### Add newly infecteds ###
   
@@ -113,8 +111,7 @@ for (i in seq_along(simulation_timesteps)) {
     # Append newly infected individuals to the "population_summary" data frame
     rates <- assign_changing_rates(new_transmission_count)
     
-    # Use "assign_changing_rates" to make new heterogeneous rate vectors of 
-    # new_transmission_count length
+    # Use "assign_changing_rates" to make new heterogeneous rate vectors of new_transmission_count length
     # This specific function (different from the initial "heterogeneous_rate" function above) changes 
     # the lambda at a user-specified time, in order to get a stable epidemic
     
@@ -128,11 +125,6 @@ for (i in seq_along(simulation_timesteps)) {
     new_infecteds <- make_new_infecteds(new_transmission_count) # makes new df to add to population_summary
     population_summary <- rbind(population_summary, new_infecteds)
     # population_summary now includes old IDs ($recipient) and new IDs
-    
-    # Update $cumulative_infections variable for all cases where $recipient is included
-    # in the "transmitters" vector
-    population_summary$cumulative_transmissions[population_summary$recipient %in% transmitters] <- 
-      population_summary$cumulative_transmissions[population_summary$recipient %in% transmitters] + 1    
 
     # Below is to add the new infected individuals to the "transmission_record"
     new_potential_sources <- data.frame("recipient" = new_infecteds$recipient, 
@@ -143,6 +135,10 @@ for (i in seq_along(simulation_timesteps)) {
     transmission_record <- rbind(transmission_record, new_potential_sources)
   }
   
+  # Update $cumulative_infections variable for all cases where $recipient is included
+  # in the "transmitters" vector
+  population_summary$cumulative_transmissions[population_summary$recipient %in% transmitters] <- 
+    population_summary$cumulative_transmissions[population_summary$recipient %in% transmitters] + 1    
   
   # Update population_summary$transmission_risk_per_act based on disease stage
   # If an individual is in "primary infection", i.e. <N days after infection, then their
