@@ -14,7 +14,7 @@
 # and then a rate parameter call conditional on the timestep
 
 
-make_new_infecteds <- function(n){
+make_new_infecteds <- function(n, i){
     
   df <- data.frame(
     "recipient" = seq( from = nrow(population_summary) + 1, to = nrow(population_summary) + n, by = 1),

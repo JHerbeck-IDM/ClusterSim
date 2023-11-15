@@ -126,6 +126,11 @@ for (i in seq_along(simulation_timesteps)) {
     population_summary <- rbind(population_summary, new_infecteds)
     # population_summary now includes old IDs ($recipient) and new IDs
 
+    # Update $cumulative_infections variable for all cases where $recipient is included
+    # in the "transmitters" vector
+    population_summary$cumulative_transmissions[population_summary$recipient %in% transmitters] <- 
+      population_summary$cumulative_transmissions[population_summary$recipient %in% transmitters] + 1    
+    
     # Below is to add the new infected individuals to the "transmission_record"
     new_potential_sources <- data.frame("recipient" = new_infecteds$recipient, 
                                         "timestep" = (new_infecteds$infectionTime),
@@ -134,11 +139,6 @@ for (i in seq_along(simulation_timesteps)) {
     
     transmission_record <- rbind(transmission_record, new_potential_sources)
   }
-  
-  # Update $cumulative_infections variable for all cases where $recipient is included
-  # in the "transmitters" vector
-  population_summary$cumulative_transmissions[population_summary$recipient %in% transmitters] <- 
-    population_summary$cumulative_transmissions[population_summary$recipient %in% transmitters] + 1    
   
   # Update population_summary$transmission_risk_per_act based on disease stage
   # If an individual is in "primary infection", i.e. <N days after infection, then their
