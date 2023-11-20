@@ -94,11 +94,14 @@ def run_analysis( sampling_rates, cutoffs, params={}, output_prefix='' ):
                                            'weighted_cluster_size_cov',
                                            'rand_seed',
                                            'sampled_individuals',
-                                           'cluster_labels'
+                                           'cluster_labels',
+                                           'successful_simulation'
                                           ]
                                  )
  
     # Run simulation
+    burn_in_days = params.get( 'burn_in_days', 365 )
+
     for key, value in params.items():
         output_prefix += '--'
         output_prefix += key.replace(' ','')
@@ -107,10 +110,19 @@ def run_analysis( sampling_rates, cutoffs, params={}, output_prefix='' ):
     population_summary = run_simulation( params )
     population_summary.to_csv( output_prefix + '--population_summary.csv' )
     reff = get_reff( population_summary )
+    successful_simulation = int( population_summary['success'].values[0] )
     
     # Build full phylo-like tree
     full_tree = build_tree( population_summary )
     full_tree.write( format=1, outfile=output_prefix + '--full_tree.nwk' )
+    
+    # Get a list of early infectees (the ones infected during the burn-in period).
+    # We will remove these nodes from the tree to avoid them corrupting the 
+    # clustering statistics.
+    population_summary_after_burn_in \
+        = population_summary[ population_summary['infectionTime'] >= burn_in_days ]
+    early_infectees \
+        = population_summary[ population_summary['infectionTime'] < burn_in_days ]['recipient'].values
     
     
     # Post-simulation parameter sweeps
@@ -120,9 +132,14 @@ def run_analysis( sampling_rates, cutoffs, params={}, output_prefix='' ):
                                          + str(sampling_rate).replace('.', '_')
     
         # Tree sampling
-        sampled_individuals = sample_population( population_summary, 
-                                                 sampling_rate 
-                                                )
+        sampled_individuals \
+            = np.concatenate( [ early_infectees, 
+                                sample_population( population_summary_after_burn_in, 
+                                                   sampling_rate 
+                                                  )
+                              ]
+                            )
+        
         sampled_tree = full_tree.copy( 'deepcopy' )
         sampled_tree.prune( sampled_individuals.tolist(), 
                             preserve_branch_length = True 
@@ -143,17 +160,18 @@ def run_analysis( sampling_rates, cutoffs, params={}, output_prefix='' ):
                 cluster_labels = get_cluster_stats( sampled_tree, cutoff )
             
             cluster_info \
-                = pd.DataFrame( { 'rand_seed'           : [rand_seed],
-                                  'reff'                : [reff],
-                                  'sampling_rate'       : [sampling_rate],
-                                  'cutoff'              : [cutoff],
-                                  'n_clusters'          : [n_clusters],
-                                  'cluster_size_mean'   : [cluster_size_mean],
-                                  'cluster_size_cov'    : [cluster_size_cov],
+                = pd.DataFrame( { 'rand_seed'            : [rand_seed],
+                                  'reff'                 : [reff],
+                                  'sampling_rate'        : [sampling_rate],
+                                  'cutoff'               : [cutoff],
+                                  'n_clusters'           : [n_clusters],
+                                  'cluster_size_mean'    : [cluster_size_mean],
+                                  'cluster_size_cov'     : [cluster_size_cov],
                                   'weighted_cluster_size_mean' : [weighted_cluster_size_mean],
                                   'weighted_cluster_size_cov'  : [weighted_cluster_size_cov],
-                                  'sampled_individuals' : [sampled_individuals.tolist()],
-                                  'cluster_labels'      : [cluster_labels]
+                                  'sampled_individuals'  : [sampled_individuals.tolist()],
+                                  'cluster_labels'       : [cluster_labels],
+                                  'successful_simulation': [successful_simulation]
                                  }
                                         )
             
