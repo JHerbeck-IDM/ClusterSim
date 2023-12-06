@@ -100,7 +100,7 @@ def run_analysis( sampling_rates, cutoffs, params={}, output_prefix='' ):
                                  )
  
     # Run simulation
-    burn_in_days = params.get( 'burn_in_days', 365 )
+    burn_in_days = params.get( 'burn_in_days', 2*365 )
 
     for key, value in params.items():
         output_prefix += '--'
@@ -109,7 +109,7 @@ def run_analysis( sampling_rates, cutoffs, params={}, output_prefix='' ):
         output_prefix += str(value).replace('.', '_')
     population_summary = run_simulation( params )
     population_summary.to_csv( output_prefix + '--population_summary.csv' )
-    reff = get_reff( population_summary )
+    reff, _ = get_reff( population_summary )
     successful_simulation = int( population_summary['success'].values[0] )
     
     # Build full phylo-like tree
@@ -144,10 +144,10 @@ def run_analysis( sampling_rates, cutoffs, params={}, output_prefix='' ):
         sampled_tree.prune( sampled_individuals.tolist(), 
                             preserve_branch_length = True 
                            )
-        sampled_tree.write( format  = 1, 
-                            outfile = output_prefix_sr + '--sampled_tree.nwk' 
-                           )
-        sampled_tree.render( output_prefix_sr + '--sampled_tree.png' )
+        #sampled_tree.write( format  = 1, 
+        #                    outfile = output_prefix_sr + '--sampled_tree.nwk' 
+        #                   )
+        # sampled_tree.render( output_prefix_sr + '--sampled_tree.png' )
 
         # Clustering analysis
         for cutoff in cutoffs:
@@ -238,7 +238,7 @@ def get_reff( population_summary ):
     #print('r_eff_mean 1/4 = ', r_eff['R_mean'][int(len(r_eff)/4):].mean() )
     reff = r_eff['R_mean'][int(len(r_eff)/4):].mean()
     
-    return reff
+    return reff, r_eff
 
 
 def run_simulation( params={} ):

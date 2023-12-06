@@ -138,11 +138,11 @@ for (i in seq_along(simulation_timesteps)) {
   new_transmission_count <- sum(transmission_record$transmission, na.rm = TRUE)
   
   # Check if the epidemic died off or got out of control
-  if ( nrow(transmission_record) > 10*samplesize ){
-      print( sprintf( "WARNING: early termination due to excessive number of infections a time %d: %d infections", i, nrow(transmission_record) ) )
-      success <- FALSE
-      break
-  }
+  #if ( nrow(transmission_record) > 30*samplesize ){
+  #    print( sprintf( "WARNING: early termination due to excessive number of infections a time %d: %d infections", i, nrow(transmission_record) ) )
+  #    success <- FALSE
+  #    break
+  #}
     
   ### Add newly infecteds ### 
   if (new_transmission_count > 0) {
