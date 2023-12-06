@@ -132,13 +132,16 @@ def run_analysis( sampling_rates, cutoffs, params={}, output_prefix='' ):
                                          + str(sampling_rate).replace('.', '_')
     
         # Tree sampling
-        sampled_individuals \
-            = np.concatenate( [ early_infectees, 
-                                sample_population( population_summary_after_burn_in, 
-                                                   sampling_rate 
-                                                  )
-                              ]
-                            )
+        #sampled_individuals \
+        #    = np.concatenate( [ early_infectees, 
+        #                        sample_population( population_summary_after_burn_in, 
+        #                                           sampling_rate 
+        #                                          )
+        #                      ]
+        #                    )
+        sampled_individuals = sample_population( population_summary_after_burn_in, 
+                                                 sampling_rate 
+                                                )
         
         sampled_tree = full_tree.copy( 'deepcopy' )
         sampled_tree.prune( sampled_individuals.tolist(), 
