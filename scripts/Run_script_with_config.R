@@ -107,6 +107,7 @@ transmission_record <- transmission_record %>% mutate(removal=0, transmission=0)
 #### Simulation loops ####
 simulation_timesteps <- seq(timestep, sim_time, by=timestep)
 loop_timesteps <- NULL # Just to make sure we were looping through all timesteps
+reduce_lambda <- FALSE  # Use it to force a reduction of lambda in assign_rates.R
 success <- TRUE  # Assume the simulations will be successful; error conditions will change this value
 
 progress_bar <- txtProgressBar( min   = 1, 
@@ -143,6 +144,11 @@ for (i in seq_along(simulation_timesteps)) {
   #    success <- FALSE
   #    break
   #}
+
+  # Early termination of burn-in increased lambda
+  if (  ( nrow( transmission_record ) > 3*samplesize ) | (i>365)  ) {
+      reduce_lambda <- TRUE
+  }
     
   ### Add newly infecteds ### 
   if (new_transmission_count > 0) {
