@@ -1,6 +1,16 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
-This script runs a simulation and get clusters
+Created on Mon Jan  8 10:00:00 2024
+
+@author: ghart
+
+This script is designed to be run on COMPS. It runs a simulation and get clusters.
+It has some ugliness to it to get it running on COMPS quickly maybe I will clean
+it up at some point. Currently it is ~3 files pasted together. This means the
+orgination (such as imports) are in different places
 """
+
 
 # Standard packages
 import os
@@ -8,10 +18,7 @@ import math
 import time
 import numpy as np
 import pandas as pd
-import seaborn
-import matplotlib
 from scipy.sparse.csgraph import connected_components
-from matplotlib import pyplot as plt
 
 import resource
 import sys
@@ -30,41 +37,79 @@ import epyestim
 from scipy.stats import gamma
 
 # R-related packages
-import rpy2
 import rpy2.robjects as robjects
-
 from rpy2.robjects import pandas2ri
 from rpy2.robjects.conversion import localconverter
 
 # IDM packages
 from phylomodels.trees import generate_treeFromFile
 from phylomodels.trees.transform_transToPhyloTree import transform_transToPhyloTree
-from phylomodels.trees.transform_joinTrees import transform_joinTrees
+from phylomodels.trees.transform_joinTrees import joinUsingConstantCoalescent, joinUsingStar
+
+# Normally this would be imported, but because of recurse issues with large trees
+# this function needed to be edited and rather than create a branch with the
+# edit and recreate the COMPS environment I just copied the function here and
+# changed it here
+def transform_joinTrees(trees, method='constant_coalescent', **kwargs):
+    """
+    Taking in a list of trees (transmission chains) join them together into a
+    single tree according to requested method. For now we only have serial-
+    sample coalescence (assuming constant population size) implemented.
+    
+    Args:
+        trees (list): List of ete3 trees to join together into one tree.
+        method (str): Optional (default 'constant_coalescent'). The name of the
+                      to use for joining the trees
+                          constant_coalescent - coalescent roots of trees
+                              together drawing branch lengths from an
+                              exponential distribution (assumes constant
+                              populaiton size).
+                    TODO add more methods
+
+    Returns:
+        Tree        : An ete3 tree containing the trees that were passed in.
+        
+    """
+    
+    trees_copy = trees
+        
+    if method.casefold() == 'constant_coalescent'.casefold():
+        combined_tree = joinUsingConstantCoalescent(trees_copy)
+    elif method.casefold() == 'star'.casefold():
+        combined_tree = joinUsingStar(trees_copy)
+    else:
+        print('ERROR: ', method, ' not an implemented or recongized method.')
+
+    return combined_tree
+
+## The following is from the find_clusters.py file, which I cannot figure out
+## how to import on COMPS.
 
 # Make sure that ETE3 renders trees
 os.environ['QT_QPA_PLATFORM']='offscreen'
 
 
 # Configuration parameters -----------------------------------------------------
-LABEL          = "test01"
-SAMPLING_RATES = [ 0.01, 0.05 ]
-CUTOFFS        = [ 700, 750, 800, 900, 1000]
 
-SIMULATOR_PATH = os.path.abspath( '../' )
+
+SIMULATOR_PATH = os.path.abspath( '.' )
 SIMULATOR_FILE = 'hiv_branching_process.R'
-RESULTS_PATH   = os.path.abspath( '../results' )
+RESULTS_PATH   = os.path.abspath( 'output' )
+
+if not os.path.exists(RESULTS_PATH):
+            os.mkdir(RESULTS_PATH)
 #-------------------------------------------------------------------------------
 
 
 
-def main():
+def find_clusters():
 
     # Set parameters
     params = { 'sim_time':3650, 'seed':0 }
 
 
     # Create output directory and file name prefix
-    results_dir = os.path.join( RESULTS_PATH, LABEL )
+    results_dir = RESULTS_PATH
     if os.path.exists( results_dir ):
         print( '... the directory ', results_dir )
         print( '    already exists. Simulation results may overwrite files in' )
@@ -74,7 +119,7 @@ def main():
     else:
         os.makedirs( results_dir )
 
-    output_prefix = results_dir + '/' + LABEL
+    output_prefix = results_dir + '/'
 
 
     # Run simulations
@@ -191,8 +236,8 @@ def run_analysis_and_get_population_summary( sampling_rates, cutoffs, params={},
     # Post-simulation parameter sweeps
     for sampling_rate in sampling_rates:
 
-        output_prefix_sr = output_prefix +  '--sampling_rate_' \
-                                         + str(sampling_rate).replace('.', '_')
+        # output_prefix_sr = output_prefix +  '--sampling_rate_' \
+        #                                  + str(sampling_rate).replace('.', '_')
     
         # Tree sampling
         sampled_individuals = sample_population( population_summary_after_burn_in, 
@@ -437,12 +482,12 @@ def run_simulation( params={} ):
     # Run the simulation
     out = r.simulate_transmission( **params )#sim_time = 365*10 )
     population_summary_r  = out.rx2('population_summary' )
-    transmission_record_r = out.rx2('transmission_record')
+    # transmission_record_r = out.rx2('transmission_record')
     
     # Convert R dataframes into pandas dataframes
     with localconverter( robjects.default_converter + pandas2ri.converter ):
         population_summary  = robjects.conversion.rpy2py( population_summary_r )
-        transmission_record = robjects.conversion.rpy2py( transmission_record_r)
+        # transmission_record = robjects.conversion.rpy2py( transmission_record_r)
         
     # Data formatting (source and recipient ids as strings)
     population_summary['recipient'] = population_summary['recipient'] \
@@ -697,7 +742,176 @@ def find_short_edges(tree, topology_only=False):
     return distance, names
 
 #---- End of Clustering --------------------------------------------------------
+
+
+## The following is based on Rafael's notebooks and sets up and runs an 'experiment'
+import argparse
+# from find_clusters import run_analysis
+
+# These three parameters are used in a single 'experiment' though I probably
+# should still have the passed in from the COMPS launching file so there is only
+# one file to edit as it appears sometimes Rafael changes the SAMPLING_RATES
+SAMPLING_RATES = [ 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]#[k/100 for k in range(4, 102, 2)]  # [0.01, 0.2, 0.5, 0.7, 1.0]
+CUTOFFS        = [k*365 for k in [2, 5, 7]]  # [1, 2.5, 5, 7.5, 10]]
+REPS = 5  # Repeat simulations with different random number seeds for every set of parameters
+
+# Simulation defaults
+SAMPLE_SIZE      = 250
+SIM_TIME         = 365*20
+RAND_SEED_OFFSET = 0
+
+# Network defaults
+MEAN_PARTNER = 0.35
+
+# Transmission defaults          
+ACTS_PER_DAY = 0.1
+LAMBDA       = 0.001
+REMOVAL_RATE = 0.0005
+
+# Sampling defaults
+SAMPLING_DELAY = 360
+
+# This function processes the parameters that are passed in as arguements
+def get_arguments():
+    """
+    This function parses the input arguments for the rest of the script to use.
+    See the information in the add_argument commands or README for more information.
+    """
+
+    # Set up the parser and let it know what arguments to expect
+    parser = argparse.ArgumentParser(
+        prog='Get arguments for cluster analysis',
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        description='Argument parser for all cluster analysis scripts')
+    parser.add_argument('--partnerNumber', '-P', metavar='PARTNERNUMBER',
+                        help='Mean number of partners',
+                        default=0.35, type=float)
+    parser.add_argument('--lambdaParameter', '-L', metavar='LAMBDAPARAMETER',
+                        help='Lambda or infectiousness',
+                        default=0.001, type=float)
+    parser.add_argument('--actsPerDay', '-A', metavar='ACTSPERDAY', 
+                        help='Number of sexual acts per day',
+                        default=0.1, type=float)
+    parser.add_argument('--removalRate', '-R', metavar='REMOVALRATE',
+                        help='Rate that individuals are removed from the population',
+                        default=0.0005, type=float)
+    parser.add_argument('--samplingDelay', '-D', metavar='SAMPLINGDELAY',
+                        help='The time (in days) before we start sampling',
+                        default=360, type=float)
+    parser.add_argument('--sampleSize', '-S', metavar='SAMPLESIZE',
+                        help='Number of samples to take',
+                        default=250, type=float)
+    parser.add_argument('--experimentID', '-I', metavar='EXPERIMENTID',
+                        help='The ID of the experiment',
+                        default=0, type=float)
+    input_args = parser.parse_args()
+
+    # Get the arguments as individual variables
+    partner_number   = input_args.partnerNumber
+    lambda_parameter = input_args.lambdaParameter
+    acts_per_day     = input_args.actsPerDay
+    removal_rate     = input_args.removalRate
+    sampling_delay   = input_args.samplingDelay
+    sample_size      = input_args.sampleSize
+    experiment_ID    = input_args.experimentID
+
+    # Return a dictionary with all the needed variables
+    return {'partner_number': partner_number,
+            'lambda_parameter': lambda_parameter,
+            'acts_per_day': acts_per_day,
+            'removal_rate': removal_rate,
+            'sampling_delay': sampling_delay,
+            'sample_size': sample_size,
+            'experiment_ID': experiment_ID}
+
+# From Rafael's notebooks (specifically 07)
+def single_run( experiment_params={}, rand_seed_start=RAND_SEED_OFFSET ):
+
+    # Prepare parameters for branching process simulation
+    params = {}
+
+    # Simulation configuration
+    params['samplesize'] = experiment_params.get( 'samplesize', SAMPLE_SIZE      )
+    params['sim_time'  ] = experiment_params.get( 'sim_time'  , SIM_TIME         )
     
+    # Network
+    params['mean_partner'] = experiment_params.get( 'mean_partner', MEAN_PARTNER )
+
+    # Transmission          
+    params['acts_per_day'] = experiment_params.get( 'acts_per_day', ACTS_PER_DAY )
+    params['lambda'      ] = experiment_params.get( 'lambda'      , LAMBDA       )
+    params['removal_rate'] = experiment_params.get( 'removal_rate', REMOVAL_RATE )
+
+    # Sampling t
+    params['sampling_delay'] = experiment_params.get( 'sampling_delay', SAMPLING_DELAY )
+
+
+    # Run analysis
+    output = pd.DataFrame()
+    for rep in range(REPS):
+        print( '... running rep ', 1+rep, '/', REPS )
+        
+        params['seed'] = rand_seed_start + rep
+        this_output = run_analysis( SAMPLING_RATES, CUTOFFS, params, RESULTS_PATH + '/' )
+        this_output['rep'] = rep
+
+        output = pd.concat( [output, this_output], ignore_index=True )
+
+
+    return output
+
+# From Rafael's notebooks (specifically 07)
+# This function runs an experiment and saves the results in a csv file
+def run_experiment( partner_number, 
+                    lambda_param, 
+                    acts_per_day, 
+                    removal_rate, 
+                    sampling_delay,
+                    samplesize,
+                    experiment_id ):
+
+    # Prepare parameters for branching process simulation
+    experiment_params = {}
+
+    # Simulation configuration
+    experiment_params['samplesize'] = samplesize
+    experiment_params['sim_time'  ] = SIM_TIME
     
-if __name__ == '__main__':
-    main()
+    # Network
+    experiment_params['mean_partner'] = partner_number
+
+    # Transmission          
+    experiment_params['acts_per_day'] = acts_per_day
+    experiment_params['lambda'      ] = lambda_param
+    experiment_params['removal_rate'] = removal_rate
+
+    # Sampling t
+    experiment_params['sampling_delay'] = sampling_delay
+
+    print( '... Running experiment with experiment_params = ', experiment_params )
+
+
+    # Run analysis and update results
+    output = pd.DataFrame()
+    tic = time.time()
+    try:
+        output = single_run( experiment_params )
+    except:
+        print('... error running experiment with experiment_params = ', experiment_params )
+    toc = time.time() - tic
+    for key, value in experiment_params.items():
+        output[key] = value
+    output['execution_time'] = toc
+    output['experiment_id'] = experiment_id
+    output.to_csv(os.path.join(RESULTS_PATH, 'parameter-sweep-results.csv' ), index = False)
+    return
+
+# Process the arguements and run the experiment
+input_arguments = get_arguments()
+run_experiment(input_arguments['partner_number'],
+               input_arguments['lambda_parameter'],
+               input_arguments['acts_per_day'],
+               input_arguments['removal_rate'],
+               input_arguments['sampling_delay'],
+               input_arguments['sample_size'],
+               input_arguments['experiment_ID'])

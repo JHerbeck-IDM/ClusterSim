@@ -37,11 +37,11 @@ simulate_transmission <- function( # Simulation parameters
     
           
     # Source scripts
-    source("scripts/assign_rates.R", local=TRUE)
-    source("scripts/assess_removal_and_transmission.R", local=TRUE)
-    source("scripts/make_new_infecteds.R", local=TRUE)
+    source("assign_rates.R", local=TRUE)
+    source("assess_removal_and_transmission.R", local=TRUE)
+    source("make_new_infecteds.R", local=TRUE)
     
-    source("scripts/Run_script_with_config.R", local=TRUE)
+    source("Run_script_with_config.R", local=TRUE)
   
     
     # Return relevant data

@@ -107,6 +107,8 @@ transmission_record <- transmission_record %>% mutate(removal=0, transmission=0)
 #### Simulation loops ####
 simulation_timesteps <- seq(timestep, sim_time, by=timestep)
 loop_timesteps <- NULL # Just to make sure we were looping through all timesteps
+reduce_lambda <- FALSE  # Use it to force a reduction of lambda in assign_rates.R
+success <- TRUE  # Assume the simulations will be successful; error conditions will change this value
 
 progress_bar <- txtProgressBar( min   = 1, 
                                 max   = simulation_timesteps[length(simulation_timesteps)], 
@@ -136,9 +138,19 @@ for (i in seq_along(simulation_timesteps)) {
   transmission_record <- assess_transmission(population_summary, transmission_record)
   new_transmission_count <- sum(transmission_record$transmission, na.rm = TRUE)
   
-  
-  ### Add newly infecteds ###
-  
+  # Check if the epidemic died off or got out of control
+  #if ( nrow(transmission_record) > 30*samplesize ){
+  #    print( sprintf( "WARNING: early termination due to excessive number of infections a time %d: %d infections", i, nrow(transmission_record) ) )
+  #    success <- FALSE
+  #    break
+  #}
+
+  # Early termination of burn-in increased lambda
+  if (  ( nrow( transmission_record ) > 3*samplesize ) | (i>365)  ) {
+      reduce_lambda <- TRUE
+  }
+    
+  ### Add newly infecteds ### 
   if (new_transmission_count > 0) {
     
     # Append newly infected individuals to the "population_summary" data frame
@@ -155,7 +167,7 @@ for (i in seq_along(simulation_timesteps)) {
     # the "rates", "transmitters", "removed", and "infection_days" vectors are used
     # in the "make_new_infected()" function to fill in variables
     
-    new_infecteds <- make_new_infecteds(new_transmission_count, i) # makes new df to add to population_summary
+    new_infecteds <- make_new_infecteds(new_transmission_count) # makes new df to add to population_summary
     population_summary <- rbind(population_summary, new_infecteds)
     # population_summary now includes old IDs ($recipient) and new IDs
     
@@ -165,7 +177,13 @@ for (i in seq_along(simulation_timesteps)) {
       population_summary$cumulative_transmissions[population_summary$recipient %in% transmitters] + 1    
     
     
-    
+    # Update population_summary$transmission_risk_per_act based on disease stage
+    # If an individual is in "primary infection", i.e. <3 months after infection, then their
+    # $transmission_risk_per_act is X10, otherwise as is.
+    acute_infection_time <- 30
+    population_summary$transmission_risk_per_act <- ifelse((i - population_summary$infectionTime > acute_infection_time),
+                                                           population_summary$transmission_risk_per_act * 10,
+                                                           population_summary$transmission_risk_per_act)
     
     
     # Below is to add the new infected individuals to the "transmission_record"
@@ -175,10 +193,28 @@ for (i in seq_along(simulation_timesteps)) {
                                         "transmission" = 0)
     
     transmission_record <- rbind(transmission_record, new_potential_sources)
-      
   }
   
-  # Then it goes back to the "for (i in seq_along(simulation_timesteps)) {" line
+  # Update population_summary$transmission_risk_per_act based on disease stage
+  # If an individual is in "primary infection", i.e. <N days after infection, then their
+  # $transmission_risk_per_act is higher than the base lambda, otherwise it remains as is.
+  
+  acute_infection_time <- 30  # days in which the lambda is elevated
+  
+  population_summary$transmission_risk_per_act <- ifelse( ((i - population_summary$infectionTime )== 0),
+                                                          population_summary$transmission_risk_per_act * 5,
+                                                          population_summary$transmission_risk_per_act)
+  population_summary$transmission_risk_per_act <- ifelse( ((i - population_summary$infectionTime )== acute_infection_time),
+                                                          population_summary$transmission_risk_per_act / 5,
+                                                          population_summary$transmission_risk_per_act)
+  # at day 0 of infection we elevate the lambda
+  # at day "acute_infection_time" of infection, we replace the elevated lambda with the base lambda
+  
+  population_summary$transmission_risk_per_act <- replace(population_summary$transmission_risk_per_act, 
+                                                          population_summary$transmission_risk_per_act >= 1, 0.95)  
+  # transmission_risk_per_act can't be >= 1
+  
+  # Then it loops back to the "for (i in seq_along(simulation_timesteps)) {" line
   # (the next step in the loop through simulation_timesteps)
 }
 close(progress_bar)
@@ -186,21 +222,22 @@ close(progress_bar)
 
 # Add in the time of sampling after infection
 # Needs to be after the last transmission of each recipient (right now, in order for "makenewick.R" to work)
-for (i in 1:nrow(population_summary)) {
-  population_summary$sampleTime[i] <-
-    if (!(population_summary$recipient[i] %in% population_summary$source)) {
+for (ii in 1:nrow(population_summary)) {
+  population_summary$sampleTime[ii] <-
+    if (!(population_summary$recipient[ii] %in% population_summary$source)) {
       #if the recipient is not a source, then
       
-      population_summary$infectionTime[i] + sampling_delay
+      population_summary$infectionTime[ii] + sampling_delay
     } else{
       # sampleTime is "sampling_delay" days after the infectionTime,
       
-      max(population_summary$infectionTime[population_summary$source == population_summary$recipient[i]]) + sampling_delay
+      max(population_summary$infectionTime[population_summary$source == population_summary$recipient[ii]]) + sampling_delay
       # otherwise, if the recipient is a source, the sample time is after the last transmission
       
     }
 }
 
+population_summary$success = success
 
 #### Post-processing ####
 if (DEBUG){
