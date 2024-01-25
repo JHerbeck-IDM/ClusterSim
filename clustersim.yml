@@ -1,0 +1,69 @@
+# Conda environment setup:
+#    conda env create -f [filename.yml]
+#
+name: clustersim_20230720
+channels:
+  - defaults
+  - conda-forge
+
+dependencies:
+  - python=3.9
+  - pip
+
+  # Core scientific python
+  - numpy
+  - scipy
+  - pandas
+  - matplotlib
+  - seaborn
+
+  # Numerical libraries  
+  - blas
+  - mkl
+
+  # Machine learning
+  #- scikit-learn
+
+  # R interface
+  - rpy2
+  - tzlocal
+
+  # Graphs/networks
+  - networkx
+  - ete3
+  #- pygraphviz
+  #- pydot
+  #- gdal
+
+  # Others
+  #- numba=0.48
+  #- optuna
+  #- openpyxl
+  #- patsy
+  #- statsmodels
+  #- tornado
+  #- xlrd
+
+  # More dependencies (via pip)
+  - pip:
+    #- pydoe
+    #- pydoe2
+    #- pycuda
+    #- sciris
+    #- gunicorn
+    #- scikit-cuda
+    - jupyter
+    - jupyter-core
+    - jupyter-console
+    - jupyter-client
+    #- optuna
+    #- tables
+    #- wand
+    #- wandb
+    #- unittest-xml-reporting
+    #- "--editable=git+https://github.com/amath-idm/covasim.git#egg=covasim"
+    #- "--editable=git+https://github.com/amath-idm/synthpops.git@master#egg=synthpops"
+    #- git+https://github.com/rnunez-IDM/history_matching_demos.git@master
+    #- "--editable=git+https://github.com/InstituteforDiseaseModeling/phyloModels@master#egg=phylomodels"
+    #- git+https://github.com/InstituteforDiseaseModeling/history_matching.git@master
+    - "--editable=git+https://github.com/ghart-IDM/HIVclusteringExample@clustering#egg=hivclusteringexample"
